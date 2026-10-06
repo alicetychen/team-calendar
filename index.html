@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>DC 團隊請假／出差行事曆 | Product Project Management Section</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -627,12 +630,6 @@
             if (m.proxy === undefined) {
               const defaultMember = DEFAULT_DATA.members.find(dm => dm.id === m.id);
               m.proxy = defaultMember ? (defaultMember.proxy || '') : '';
-            }
-          });
-          // 相容舊版：將 wfh 且 note 含「出差」的記錄遷移為 trip 類型
-          currentData.events.forEach(ev => {
-            if (ev.type === 'wfh' && ev.note && ev.note.includes('出差')) {
-              ev.type = 'trip';
             }
           });
         } catch (e) {
