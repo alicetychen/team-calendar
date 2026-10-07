@@ -80,6 +80,12 @@
             <span id="adminLockText">🔒 唯讀模式</span>
           </button>
 
+          <!-- 修改管理員密碼按鈕 (權限控制) -->
+          <button onclick="openChangePwdModal()" id="btnChangePwd" class="admin-only hidden flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition-colors">
+            <i data-lucide="key" class="w-3.5 h-3.5 text-amber-600"></i>
+            <span>修改密碼</span>
+          </button>
+
           <!-- 雲端同步 status 按鈕 -->
           <button onclick="openCloudSyncModal()" id="cloudStatusBtn" class="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-lg border border-amber-300 transition-all">
             <i data-lucide="cloud" id="cloudStatusIcon" class="w-3.5 h-3.5 text-amber-600"></i>
@@ -671,7 +677,7 @@ function doPost(e) {
         <div class="space-y-1">
           <label class="block font-bold text-slate-700">請輸入管理員解鎖密碼：</label>
           <input type="password" id="adminPasswordInput" placeholder="請輸入密碼 (預設：8888)" autofocus class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm font-bold focus:ring-2 focus:ring-amber-500 focus:outline-none">
-          <p class="text-[11px] text-slate-400 pt-1">💡 預設解鎖密碼為 <code class="font-bold text-slate-600 bg-slate-100 px-1 py-0.5 rounded">8888</code>（解鎖後可點擊標題處修改）</p>
+          <p class="text-[11px] text-slate-400 pt-1">💡 預設解鎖密碼為 <code class="font-bold text-slate-600 bg-slate-100 px-1 py-0.5 rounded">8888</code>（解鎖後右上角會出現「🔑 修改密碼」按鈕）</p>
         </div>
         <div id="adminLoginError" class="hidden text-rose-600 font-bold text-[11px] bg-rose-50 border border-rose-200 p-2 rounded">
           ⚠️ 密碼錯誤，請重新輸入！
