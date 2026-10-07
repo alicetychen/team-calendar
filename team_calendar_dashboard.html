@@ -74,20 +74,26 @@
 
         <!-- 右側季度與日期標籤 ＋ 控制選單 -->
         <div class="flex items-center space-x-3 no-print">
+          <!-- 權限鎖定 / 解鎖按鈕 -->
+          <button onclick="toggleAdminLock()" id="adminLockBtn" class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition-all">
+            <i data-lucide="lock" id="adminLockIcon" class="w-3.5 h-3.5 text-slate-500"></i>
+            <span id="adminLockText">🔒 唯讀模式</span>
+          </button>
+
           <!-- 雲端同步 status 按鈕 -->
           <button onclick="openCloudSyncModal()" id="cloudStatusBtn" class="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-lg border border-amber-300 transition-all">
             <i data-lucide="cloud" id="cloudStatusIcon" class="w-3.5 h-3.5 text-amber-600"></i>
             <span id="cloudStatusText">☁️ 全團隊自動同步</span>
           </button>
 
-          <!-- 成員管理按鈕 -->
-          <button onclick="openManageMembersModal()" class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition-colors">
+          <!-- 成員管理按鈕 (權限控制) -->
+          <button onclick="openManageMembersModal()" id="btnManageMembers" class="admin-only hidden flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition-colors">
             <i data-lucide="users-cog" class="w-3.5 h-3.5 text-slate-600"></i>
             <span>調整組織成員</span>
           </button>
 
-          <!-- 新增行程按鈕 -->
-          <button onclick="openModal()" class="flex items-center space-x-1.5 px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all hover:scale-[1.02]">
+          <!-- 新增行程按鈕 (權限控制) -->
+          <button onclick="openModal()" id="btnAddEvent" class="admin-only hidden flex items-center space-x-1.5 px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all hover:scale-[1.02]">
             <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
             <span>新增行程 / 請假</span>
           </button>
@@ -637,11 +643,81 @@ function doPost(e) {
       </div>
 
       <!-- Footer -->
-      <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
-        <button onclick="closeCloudSyncModal()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition-colors">
+      <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+        <button onclick="openChangePwdModal()" class="admin-only hidden px-3 py-1.5 text-xs text-sky-700 hover:bg-sky-50 border border-sky-200 font-bold rounded-lg transition-colors flex items-center space-x-1">
+          <i data-lucide="key" class="w-3.5 h-3.5"></i>
+          <span>🔑 修改管理員密碼</span>
+        </button>
+        <button onclick="closeCloudSyncModal()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition-colors ml-auto">
           關閉
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal 5：管理員權限登入驗證 Modal -->
+  <div id="adminLoginModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 hidden no-print p-4">
+    <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden flex flex-col">
+      <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="shield-check" class="w-5 h-5 text-amber-400"></i>
+          <h3 class="font-bold text-sm">管理員身分驗證</h3>
+        </div>
+        <button onclick="closeAdminLoginModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <form onsubmit="submitAdminLogin(event)" class="p-5 space-y-4 text-xs">
+        <div class="space-y-1">
+          <label class="block font-bold text-slate-700">請輸入管理員解鎖密碼：</label>
+          <input type="password" id="adminPasswordInput" placeholder="請輸入密碼 (預設：8888)" autofocus class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm font-bold focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <p class="text-[11px] text-slate-400 pt-1">💡 預設解鎖密碼為 <code class="font-bold text-slate-600 bg-slate-100 px-1 py-0.5 rounded">8888</code>（解鎖後可點擊標題處修改）</p>
+        </div>
+        <div id="adminLoginError" class="hidden text-rose-600 font-bold text-[11px] bg-rose-50 border border-rose-200 p-2 rounded">
+          ⚠️ 密碼錯誤，請重新輸入！
+        </div>
+        <div class="pt-2 flex items-center justify-end space-x-2 border-t border-slate-100">
+          <button type="button" onclick="closeAdminLoginModal()" class="px-3.5 py-1.5 text-slate-600 hover:bg-slate-100 rounded-lg font-bold">
+            取消
+          </button>
+          <button type="submit" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg shadow-xs transition-colors">
+            確認解鎖
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 6：修改管理員密碼 Modal -->
+  <div id="changePwdModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 hidden no-print p-4">
+    <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden flex flex-col">
+      <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="key-round" class="w-5 h-5 text-sky-400"></i>
+          <h3 class="font-bold text-sm">修改管理員解鎖密碼</h3>
+        </div>
+        <button onclick="closeChangePwdModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <form onsubmit="submitChangePassword(event)" class="p-5 space-y-3.5 text-xs">
+        <div class="space-y-1">
+          <label class="block font-bold text-slate-700">新密碼：</label>
+          <input type="password" id="newAdminPwd" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm font-bold focus:ring-2 focus:ring-sky-500 focus:outline-none">
+        </div>
+        <div class="space-y-1">
+          <label class="block font-bold text-slate-700">再次確認新密碼：</label>
+          <input type="password" id="confirmAdminPwd" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm font-bold focus:ring-2 focus:ring-sky-500 focus:outline-none">
+        </div>
+        <div class="pt-2 flex items-center justify-end space-x-2 border-t border-slate-100">
+          <button type="button" onclick="closeChangePwdModal()" class="px-3.5 py-1.5 text-slate-600 hover:bg-slate-100 rounded-lg font-bold">
+            取消
+          </button>
+          <button type="submit" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg shadow-xs transition-colors">
+            更新密碼
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -949,6 +1025,116 @@ function doPost(e) {
       });
     }
 
+    // 權限系統變數 (預設密碼 8888)
+    let isAdminUnlocked = sessionStorage.getItem('team_calendar_admin_unlocked') === 'true';
+    let adminPassword = localStorage.getItem('team_calendar_admin_pwd') || '8888';
+
+    function updateAdminLockUI() {
+      const lockBtn = document.getElementById('adminLockBtn');
+      const lockIcon = document.getElementById('adminLockIcon');
+      const lockText = document.getElementById('adminLockText');
+
+      const adminElements = document.querySelectorAll('.admin-only');
+
+      if (isAdminUnlocked) {
+        if (lockBtn) {
+          lockBtn.className = "flex items-center space-x-1.5 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold rounded-lg border border-amber-300 transition-all shadow-xs";
+        }
+        if (lockIcon) {
+          lockIcon.className = "w-3.5 h-3.5 text-amber-700";
+          lockIcon.setAttribute('data-lucide', 'unlock');
+        }
+        if (lockText) {
+          lockText.innerText = "🔓 管理員解鎖中";
+        }
+        adminElements.forEach(el => el.classList.remove('hidden'));
+      } else {
+        if (lockBtn) {
+          lockBtn.className = "flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition-all";
+        }
+        if (lockIcon) {
+          lockIcon.className = "w-3.5 h-3.5 text-slate-500";
+          lockIcon.setAttribute('data-lucide', 'lock');
+        }
+        if (lockText) {
+          lockText.innerText = "🔒 唯讀模式 (登入)";
+        }
+        adminElements.forEach(el => el.classList.add('hidden'));
+      }
+      lucide.createIcons();
+    }
+
+    function toggleAdminLock() {
+      if (isAdminUnlocked) {
+        if (confirm("確定要登出管理員身分並恢復「唯讀模式」嗎？")) {
+          isAdminUnlocked = false;
+          sessionStorage.setItem('team_calendar_admin_unlocked', 'false');
+          updateAdminLockUI();
+          refreshAll();
+        }
+      } else {
+        openAdminLoginModal();
+      }
+    }
+
+    function openAdminLoginModal() {
+      document.getElementById('adminPasswordInput').value = '';
+      document.getElementById('adminLoginError').classList.add('hidden');
+      document.getElementById('adminLoginModal').classList.remove('hidden');
+      setTimeout(() => {
+        const inp = document.getElementById('adminPasswordInput');
+        if (inp) inp.focus();
+      }, 100);
+      lucide.createIcons();
+    }
+
+    function closeAdminLoginModal() {
+      document.getElementById('adminLoginModal').classList.add('hidden');
+    }
+
+    function submitAdminLogin(e) {
+      e.preventDefault();
+      const inputPwd = document.getElementById('adminPasswordInput').value;
+      if (inputPwd === adminPassword) {
+        isAdminUnlocked = true;
+        sessionStorage.setItem('team_calendar_admin_unlocked', 'true');
+        closeAdminLoginModal();
+        updateAdminLockUI();
+        refreshAll();
+      } else {
+        document.getElementById('adminLoginError').classList.remove('hidden');
+      }
+    }
+
+    function openChangePwdModal() {
+      document.getElementById('newAdminPwd').value = '';
+      document.getElementById('confirmAdminPwd').value = '';
+      document.getElementById('changePwdModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeChangePwdModal() {
+      document.getElementById('changePwdModal').classList.add('hidden');
+    }
+
+    function submitChangePassword(e) {
+      e.preventDefault();
+      const p1 = document.getElementById('newAdminPwd').value;
+      const p2 = document.getElementById('confirmAdminPwd').value;
+      if (p1 !== p2) {
+        alert("兩次輸入的新密碼不一致！");
+        return;
+      }
+      if (p1.length < 4) {
+        alert("密碼長度至少需為 4 個字元！");
+        return;
+      }
+      adminPassword = p1;
+      localStorage.setItem('team_calendar_admin_pwd', p1);
+      alert("🎉 管理員密碼修改成功！");
+      closeChangePwdModal();
+    }
+
     // 初次載入
     window.addEventListener('DOMContentLoaded', () => {
       initData();
@@ -969,6 +1155,7 @@ function doPost(e) {
 
     // 重新繪製畫面
     function refreshAll() {
+      updateAdminLockUI();
       renderHeaderInfo();
       populateDepartmentSelectOptions();
       renderMemberBadges();
@@ -1509,6 +1696,13 @@ function doPost(e) {
 
         const periodStr = (ev.startDate === ev.endDate) ? startFormatted : `${startFormatted} － ${endFormatted}`;
 
+        const actionCellHtml = isAdminUnlocked ? `
+          <button onclick="editEvent('${ev.id}')" class="text-sky-600 hover:text-sky-800 font-bold mr-2">編輯</button>
+          <button onclick="deleteEvent('${ev.id}')" class="text-rose-600 hover:text-rose-800 font-bold">刪除</button>
+        ` : `
+          <span class="text-slate-400 text-[11px] font-bold cursor-pointer hover:text-amber-600 transition-colors" onclick="openAdminLoginModal()" title="點擊登入管理員以解鎖編輯">🔒 唯讀</span>
+        `;
+
         return `
           <tr class="hover:bg-slate-50 transition-colors">
             <td class="py-2.5 px-4 font-black text-slate-800">${memberName}</td>
@@ -1518,8 +1712,7 @@ function doPost(e) {
             <td class="py-2.5 px-3 font-mono font-extrabold text-slate-700">${periodStr}</td>
             <td class="py-2.5 px-3 text-center font-mono font-bold text-slate-600">${workDays}</td>
             <td class="py-2.5 px-3 text-right no-print">
-              <button onclick="editEvent('${ev.id}')" class="text-sky-600 hover:text-sky-800 font-bold mr-2">編輯</button>
-              <button onclick="deleteEvent('${ev.id}')" class="text-rose-600 hover:text-rose-800 font-bold">刪除</button>
+              ${actionCellHtml}
             </td>
           </tr>
         `;
@@ -1739,6 +1932,11 @@ function doPost(e) {
 
     // Modal 1：行程新增與編輯
     function openModal(defaultDate = null) {
+      if (!isAdminUnlocked) {
+        openAdminLoginModal();
+        return;
+      }
+
       document.getElementById('formEventId').value = '';
       document.getElementById('modalTitle').innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-sky-600"></i> 新增行程 / 請假記錄';
       document.getElementById('eventForm').reset();
@@ -1754,6 +1952,11 @@ function doPost(e) {
     }
 
     function editEvent(eventId) {
+      if (!isAdminUnlocked) {
+        openAdminLoginModal();
+        return;
+      }
+
       const ev = currentData.events.find(e => e.id === eventId);
       if (!ev) return;
 
@@ -1831,6 +2034,10 @@ function doPost(e) {
 
     // Modal 2 & 3：成員管理功能
     function openManageMembersModal() {
+      if (!isAdminUnlocked) {
+        openAdminLoginModal();
+        return;
+      }
       renderManageMembersList();
       document.getElementById('manageMembersModal').classList.remove('hidden');
       lucide.createIcons();
