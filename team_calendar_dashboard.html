@@ -285,6 +285,9 @@
             <p class="text-[11px] text-slate-400 font-medium">同部門兩人以上同時不在的工作日</p>
           </div>
           <div class="flex flex-wrap items-center gap-1.5 no-print">
+            <select id="overlapDeptSelect" onchange="onOverlapDeptSelectChange(this.value)" class="bg-white border border-slate-200 text-slate-600 text-[11px] rounded px-2 py-1 focus:ring-1 focus:ring-amber-400 font-bold max-w-[145px] truncate">
+              <!-- 動態生成部門選項 -->
+            </select>
             <select id="overlapExpiredSelect" onchange="renderOverlapTable()" class="bg-white border border-slate-200 text-slate-600 text-[11px] rounded px-2 py-1 focus:ring-1 focus:ring-amber-400 font-bold max-w-[125px] truncate">
               <option value="future" selected>📅 進行中與未來</option>
               <option value="period">🗓 當前時程區間</option>
@@ -1073,6 +1076,7 @@ function doPost(e) {
     // 部門選單與 datalist 動態生成
     function populateDepartmentSelectOptions() {
       const select = document.getElementById('departmentFilterSelect');
+      const overlapSelect = document.getElementById('overlapDeptSelect');
       const datalist = document.getElementById('deptDatalist');
 
       // 收集所有出現過的部門
@@ -1086,9 +1090,25 @@ function doPost(e) {
         select.innerHTML = html;
       }
 
+      if (overlapSelect) {
+        let html = `<option value="all">🏢 全部部門</option>`;
+        depts.forEach(d => {
+          html += `<option value="${d}" ${activeDepartmentFilter === d ? 'selected' : ''}>🏢 ${d}</option>`;
+        });
+        overlapSelect.innerHTML = html;
+      }
+
       if (datalist) {
         datalist.innerHTML = depts.map(d => `<option value="${d}">`).join('');
       }
+    }
+
+    function onOverlapDeptSelectChange(deptName) {
+      activeDepartmentFilter = deptName;
+      activeMemberFilter = 'all';
+      const select = document.getElementById('departmentFilterSelect');
+      if (select) select.value = deptName;
+      refreshAll();
     }
 
     function setDepartmentFilter(deptName) {
@@ -1703,16 +1723,11 @@ function doPost(e) {
           statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-200 text-rose-900 border border-rose-400 whitespace-nowrap inline-block">⚠️ 代理人同時不在</span>`;
         }
 
-        const deptTag = activeDepartmentFilter === 'all'
-          ? `<span class="text-[10px] bg-sky-50 text-sky-700 border border-sky-200 px-1.5 py-0.5 rounded font-bold inline-block mb-1">${r.deptName}</span><br>`
-          : '';
-
         return `
           <tr class="hover:bg-slate-50 transition-colors">
             <td class="py-2.5 px-4 font-mono font-extrabold text-slate-800 whitespace-nowrap">${periodStr}</td>
             <td class="py-2.5 px-3 text-center font-mono font-bold text-slate-600">${r.workDays}</td>
             <td class="py-2.5 px-3 font-bold text-slate-700 text-[11px]">
-              ${deptTag}
               ${r.members}
             </td>
             <td class="py-2.5 px-3 text-[11px] whitespace-nowrap">${proxyCell}</td>
