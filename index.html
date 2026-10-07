@@ -235,8 +235,8 @@
           <!-- 假別明細篩選與過期資訊開關 -->
           <div class="flex flex-wrap items-center gap-1.5 text-xs no-print">
             <select id="expiredFilterSelect" onchange="renderLeaveDetailTable()" class="bg-white border border-slate-200 text-slate-600 text-[11px] rounded px-2 py-1 focus:ring-1 focus:ring-sky-500 font-bold max-w-[125px] truncate">
-              <option value="period" selected>🗓 當前時程區間</option>
-              <option value="future">📅 進行中與未來</option>
+              <option value="future" selected>📅 進行中與未來</option>
+              <option value="period">🗓 當前時程區間</option>
               <option value="all">🗂 顯示全部（含歷史）</option>
             </select>
 
@@ -280,8 +280,8 @@
           </div>
           <div class="flex flex-wrap items-center gap-1.5 no-print">
             <select id="overlapExpiredSelect" onchange="renderOverlapTable()" class="bg-white border border-slate-200 text-slate-600 text-[11px] rounded px-2 py-1 focus:ring-1 focus:ring-amber-400 font-bold max-w-[125px] truncate">
-              <option value="period" selected>🗓 當前時程區間</option>
-              <option value="future">📅 進行中與未來</option>
+              <option value="future" selected>📅 進行中與未來</option>
+              <option value="period">🗓 當前時程區間</option>
               <option value="all">🗂 顯示全部（含歷史）</option>
             </select>
             <select id="overlapFilterSelect" onchange="renderOverlapTable()" class="bg-white border border-slate-200 text-slate-600 text-[11px] rounded px-2 py-1 focus:ring-1 focus:ring-amber-400 font-bold">
@@ -317,7 +317,7 @@
 
   <!-- 頁腳 -->
   <footer class="text-center text-xs text-slate-400 py-4 no-print">
-    <p>DC Business Dept. ｜ Product Project Management Section ｜ 團隊行事曆模板</p>
+    <p>DC Business Dept. ｜ 團隊行事曆模板</p>
   </footer>
 
   <!-- 彈出視窗 1：新增 / 編輯行程 (Event Modal) -->
@@ -1140,7 +1140,7 @@
       const expiredFilterEl = document.getElementById('expiredFilterSelect');
       const typeFilterEl = document.getElementById('typeFilterSelect');
       
-      const expiredOption = expiredFilterEl ? expiredFilterEl.value : 'period';
+      const expiredOption = expiredFilterEl ? expiredFilterEl.value : 'future';
       const typeOption = typeFilterEl ? typeFilterEl.value : 'all';
 
       let filtered = currentData.events.filter(e => e.type !== 'event');
@@ -1239,7 +1239,7 @@
       const overlapExpiredSelect = document.getElementById('overlapExpiredSelect');
       const overlapFilterSelect = document.getElementById('overlapFilterSelect');
       
-      const overlapOption = overlapExpiredSelect ? overlapExpiredSelect.value : 'period';
+      const overlapOption = overlapExpiredSelect ? overlapExpiredSelect.value : 'future';
       const filterOption = overlapFilterSelect ? overlapFilterSelect.value : 'all';
 
       // 1. 決定要計算的部門列表
