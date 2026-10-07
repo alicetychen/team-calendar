@@ -80,12 +80,6 @@
             <span id="adminLockText">🔒 唯讀模式</span>
           </button>
 
-          <!-- 修改管理員密碼按鈕 (權限控制) -->
-          <button onclick="openChangePwdModal()" id="btnChangePwd" class="admin-only hidden flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition-colors">
-            <i data-lucide="key" class="w-3.5 h-3.5 text-amber-600"></i>
-            <span>修改密碼</span>
-          </button>
-
           <!-- 雲端同步 status 按鈕 -->
           <button onclick="openCloudSyncModal()" id="cloudStatusBtn" class="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-lg border border-amber-300 transition-all">
             <i data-lucide="cloud" id="cloudStatusIcon" class="w-3.5 h-3.5 text-amber-600"></i>
@@ -1030,9 +1024,9 @@ function doPost(e) {
       });
     }
 
-    // 權限系統變數 (預設密碼 8888)
+    // 全團隊統一固定管理員密碼
     let isAdminUnlocked = sessionStorage.getItem('team_calendar_admin_unlocked') === 'true';
-    let adminPassword = localStorage.getItem('team_calendar_admin_pwd') || '8888';
+    const ADMIN_PASSWORD = '8888';
 
     function updateAdminLockUI() {
       const lockBtn = document.getElementById('adminLockBtn');
@@ -1100,7 +1094,7 @@ function doPost(e) {
     function submitAdminLogin(e) {
       e.preventDefault();
       const inputPwd = document.getElementById('adminPasswordInput').value;
-      if (inputPwd === adminPassword) {
+      if (inputPwd === ADMIN_PASSWORD) {
         isAdminUnlocked = true;
         sessionStorage.setItem('team_calendar_admin_unlocked', 'true');
         closeAdminLoginModal();
