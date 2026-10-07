@@ -122,7 +122,7 @@
             <span class="font-bold text-slate-700">週末</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-3 bg-sky-600 text-white font-black text-[9px] rounded-xs flex items-center justify-center">今</span>
+            <span class="w-4 h-3 bg-sky-600 rounded-xs"></span>
             <span class="font-bold text-sky-700">今天 (Today)</span>
           </div>
           <span class="text-slate-400">｜</span>
@@ -933,9 +933,9 @@
           <div title="${isToday ? '今天 (Today)' : (d.holiday ? d.holiday.name : '')}" style="height:38px;" class="px-0 text-center border-r border-slate-200 select-none ${colBg} flex flex-col items-center justify-center">
             <div class="font-extrabold text-[14px] leading-none flex items-center justify-center space-x-0.5">
               <span>${d.day}</span>
-              ${isToday ? '<span class="px-0.5 bg-amber-400 text-slate-900 text-[8px] font-black rounded ml-0.5 leading-tight">今</span>' : (isHoliday ? '<span class="w-1 h-1 rounded-full bg-rose-500 ml-0.5"></span>' : '')}
+              ${isHoliday ? '<span class="w-1 h-1 rounded-full bg-rose-500 ml-0.5"></span>' : ''}
             </div>
-            <div class="text-[10px] ${isToday ? 'opacity-100 font-bold text-amber-200' : 'opacity-70'} leading-none mt-0.5">${['日','一','二','三','四','五','六'][d.dayOfWeek]}</div>
+            <div class="text-[10px] ${isToday ? 'opacity-100 font-extrabold text-white' : 'opacity-70'} leading-none mt-0.5">${['日','一','二','三','四','五','六'][d.dayOfWeek]}</div>
           </div>
         `;
       });
@@ -968,8 +968,8 @@
         let dot = "";
 
         if (isToday) {
-          bg = "bg-sky-500 text-white font-black text-[9px]";
-          dot = "今";
+          bg = "bg-sky-500";
+          dot = "";
         } else if (isHoliday) {
           bg = "bg-rose-100/70";
           dot = `<span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>`;
