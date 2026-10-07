@@ -223,18 +223,18 @@
       
       <!-- 左卡片：【假別明細】 (Leave & Trip Details) -->
       <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200/90 shadow-xs overflow-hidden flex flex-col">
-        <div class="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 bg-slate-50/50">
-          <div class="flex items-center space-x-2">
+        <div class="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 bg-slate-50/50 min-h-[56px]">
+          <div>
             <h3 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
               <i data-lucide="list-checks" class="w-4 h-4 text-sky-600"></i>
               假別明細
             </h3>
-            <span id="detailCountLabel" class="text-[11px] text-slate-400 font-medium">共 0 筆記錄</span>
+            <p class="text-[11px] text-slate-400 font-medium">同部門成員假別與出差紀錄清單</p>
           </div>
 
           <!-- 假別明細篩選與過期資訊開關 -->
           <div class="flex flex-wrap items-center gap-1.5 text-xs no-print">
-            <select id="expiredFilterSelect" onchange="renderLeaveDetailTable()" class="bg-white border border-slate-200 text-slate-600 text-[11px] rounded px-2 py-1 focus:ring-1 focus:ring-sky-500 font-bold max-w-[130px] truncate">
+            <select id="expiredFilterSelect" onchange="renderLeaveDetailTable()" class="bg-white border border-slate-200 text-slate-600 text-[11px] rounded px-2 py-1 focus:ring-1 focus:ring-sky-500 font-bold max-w-[125px] truncate">
               <option value="period" selected>🗓 當前時程區間</option>
               <option value="future">📅 進行中與未來</option>
               <option value="all">🗂 顯示全部（含歷史）</option>
@@ -246,12 +246,13 @@
               <option value="wfh">居家</option>
               <option value="trip">出差</option>
             </select>
+            <span id="detailCountLabel" class="text-xs text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 font-bold whitespace-nowrap">共 0 筆</span>
           </div>
         </div>
 
         <div class="overflow-x-auto overflow-y-auto max-h-[380px] custom-scrollbar flex-1">
           <table class="w-full text-left text-xs">
-            <thead class="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold z-10">
+            <thead class="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold z-10 h-9">
               <tr>
                 <th class="py-2.5 px-4">姓名</th>
                 <th class="py-2.5 px-3">類別</th>
@@ -269,19 +270,24 @@
 
       <!-- 右卡片：【人力重疊】 (Coverage & Overlap Notice) -->
       <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200/90 shadow-xs overflow-hidden flex flex-col">
-        <div class="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 bg-slate-50/50">
+        <div class="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 bg-slate-50/50 min-h-[56px]">
           <div>
             <h3 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
               <i data-lucide="users-round" class="w-4 h-4 text-amber-600"></i>
               人力重疊
             </h3>
-            <p class="text-[11px] text-slate-400 font-medium">兩人以上同時不在的工作日</p>
+            <p class="text-[11px] text-slate-400 font-medium">同部門兩人以上同時不在的工作日</p>
           </div>
           <div class="flex flex-wrap items-center gap-1.5 no-print">
-            <select id="overlapExpiredSelect" onchange="renderOverlapTable()" class="bg-white border border-slate-200 text-slate-600 text-[11px] rounded px-2 py-1 focus:ring-1 focus:ring-amber-400 font-bold max-w-[130px] truncate">
+            <select id="overlapExpiredSelect" onchange="renderOverlapTable()" class="bg-white border border-slate-200 text-slate-600 text-[11px] rounded px-2 py-1 focus:ring-1 focus:ring-amber-400 font-bold max-w-[125px] truncate">
               <option value="period" selected>🗓 當前時程區間</option>
               <option value="future">📅 進行中與未來</option>
               <option value="all">🗂 顯示全部（含歷史）</option>
+            </select>
+            <select id="overlapFilterSelect" onchange="renderOverlapTable()" class="bg-white border border-slate-200 text-slate-600 text-[11px] rounded px-2 py-1 focus:ring-1 focus:ring-amber-400 font-bold">
+              <option value="all">全部衝突</option>
+              <option value="proxy">⚠️ 代理人衝突</option>
+              <option value="multi">👥 3人以上不在</option>
             </select>
             <span id="overlapCountLabel" class="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-bold whitespace-nowrap">0 期警示</span>
           </div>
@@ -289,7 +295,7 @@
 
         <div class="overflow-x-auto overflow-y-auto max-h-[380px] custom-scrollbar flex-1">
           <table class="w-full text-left text-xs">
-            <thead class="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold z-10">
+            <thead class="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold z-10 h-9">
               <tr>
                 <th class="py-2.5 px-4 whitespace-nowrap">期間</th>
                 <th class="py-2.5 px-3 text-center whitespace-nowrap">工作日</th>
@@ -1216,7 +1222,7 @@
       }).join('');
     }
 
-    // 核心 3：【人力重疊】分析表格 (含過期與時程區間篩選，自動計算兩人以上同時不在的工作日區間)
+    // 核心 3：【人力重疊】分析表格 (依同部門獨立計算重疊，含過期與條件篩選)
     function renderOverlapTable() {
       const tbody = document.getElementById('overlapTableBody');
       const label = document.getElementById('overlapCountLabel');
@@ -1230,87 +1236,75 @@
       const lastDayOfNextM = new Date(nextY, nextM + 1, 0).getDate();
       const periodEndDate = formatDateStr(nextY, nextM, lastDayOfNextM);
 
-      const overlapFilterEl = document.getElementById('overlapExpiredSelect');
-      const overlapOption = overlapFilterEl ? overlapFilterEl.value : 'period';
+      const overlapExpiredSelect = document.getElementById('overlapExpiredSelect');
+      const overlapFilterSelect = document.getElementById('overlapFilterSelect');
+      
+      const overlapOption = overlapExpiredSelect ? overlapExpiredSelect.value : 'period';
+      const filterOption = overlapFilterSelect ? overlapFilterSelect.value : 'all';
 
-      // 收集所有事件的請假/出差出勤天數，計算每個工作日有哪些同仁請假
-      // daysMap: { dateStr: Set of member ids (只計算 leave/wfh/trip，跳過 event) }
-      const daysMap = {};
-
-      let deptMembers = currentData.members;
+      // 1. 決定要計算的部門列表
+      let deptsToCalculate = [];
       if (activeDepartmentFilter !== 'all') {
-        deptMembers = deptMembers.filter(m => (m.org || m.dept || '').includes(activeDepartmentFilter));
+        deptsToCalculate = [activeDepartmentFilter];
+      } else {
+        deptsToCalculate = Array.from(new Set(currentData.members.map(m => (m.org || m.dept || '預設部門').trim()).filter(Boolean)));
       }
-      const deptMemberIds = deptMembers.map(m => m.id);
 
-      currentData.events.forEach(ev => {
-        if (ev.type === 'event') return; // 跳過團隊活動
+      const allOverlapRanges = [];
 
-        // 若不是當前選定部門的排程，不計入人力重疊
-        if (ev.memberId !== 'all' && !deptMemberIds.includes(ev.memberId)) {
-          return;
-        }
+      // 2. 逐部門獨立計算人力重疊 (同部門至少 2 人同時不在的工作日)
+      deptsToCalculate.forEach(deptName => {
+        const deptMembers = currentData.members.filter(m => (m.org || m.dept || '').includes(deptName));
+        const deptMemberIds = deptMembers.map(m => m.id);
+        if (deptMemberIds.length < 2) return; // 成員不足 2 人無法構成同部門重疊
 
-        let cur = new Date(ev.startDate);
-        const end = new Date(ev.endDate);
+        const daysMap = {};
 
-        while (cur <= end) {
-          const dStr = formatDateStr(cur.getFullYear(), cur.getMonth(), cur.getDate());
-          const dayOfWeek = cur.getDay();
-          const holiday = getHoliday(dStr);
+        currentData.events.forEach(ev => {
+          if (ev.type === 'event') return; // 跳過團隊活動
 
-          // 只計算工作日
-          if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holiday) {
-            if (!daysMap[dStr]) daysMap[dStr] = new Set();
+          let cur = new Date(ev.startDate);
+          const end = new Date(ev.endDate);
 
-            if (ev.memberId === 'all') {
-              deptMembers.forEach(m => daysMap[dStr].add(m.id));
-            } else {
-              daysMap[dStr].add(ev.memberId);
+          while (cur <= end) {
+            const dStr = formatDateStr(cur.getFullYear(), cur.getMonth(), cur.getDate());
+            const dayOfWeek = cur.getDay();
+            const holiday = getHoliday(dStr);
+
+            // 只計算工作日
+            if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holiday) {
+              if (ev.memberId === 'all') {
+                deptMembers.forEach(m => {
+                  if (!daysMap[dStr]) daysMap[dStr] = new Set();
+                  daysMap[dStr].add(m.id);
+                });
+              } else if (deptMemberIds.includes(ev.memberId)) {
+                if (!daysMap[dStr]) daysMap[dStr] = new Set();
+                daysMap[dStr].add(ev.memberId);
+              }
             }
+            cur.setDate(cur.getDate() + 1);
           }
-          cur.setDate(cur.getDate() + 1);
-        }
-      });
+        });
 
-      // 找出多人請假的工作日 (Set.size >= 2)
-      const overlapDates = Object.keys(daysMap).filter(dStr => daysMap[dStr].size >= 2).sort();
+        // 找出同部門 2 人以上請假的工作日
+        const overlapDates = Object.keys(daysMap).filter(dStr => daysMap[dStr].size >= 2).sort();
 
-      // 將連續的工作日合併成區間段 (Ranges)
-      const overlapRanges = [];
-      let currentRange = null;
+        // 合併連續工作日為區間
+        let currentRange = null;
 
-      overlapDates.forEach(dStr => {
-        const memberIdsSorted = Array.from(daysMap[dStr]).sort();
-        const membersList = memberIdsSorted.map(id => {
-          const m = currentData.members.find(x => x.id === id);
-          return m ? (m.fullName || m.name) : id;
-        }).join('、');
-        const count = daysMap[dStr].size;
-        const memberIdsKey = memberIdsSorted.join(',');
+        overlapDates.forEach(dStr => {
+          const memberIdsSorted = Array.from(daysMap[dStr]).sort();
+          const membersList = memberIdsSorted.map(id => {
+            const m = currentData.members.find(x => x.id === id);
+            return m ? (m.fullName || m.name) : id;
+          }).join('、');
+          const count = daysMap[dStr].size;
+          const memberIdsKey = memberIdsSorted.join(',');
 
-        if (!currentRange) {
-          currentRange = {
-            startDate: dStr,
-            endDate: dStr,
-            workDays: 1,
-            members: membersList,
-            memberIds: memberIdsSorted,
-            memberIdsKey: memberIdsKey,
-            count: count
-          };
-        } else {
-          // 檢查是否為連續工作日且請假人員名單相同
-          const prevDate = new Date(currentRange.endDate);
-          const curDate = new Date(dStr);
-          const diffDays = Math.round((curDate - prevDate) / 86400000);
-
-          if (diffDays <= 3 && currentRange.memberIdsKey === memberIdsKey) { // 跨週末連續
-            currentRange.endDate = dStr;
-            currentRange.workDays += 1;
-          } else {
-            overlapRanges.push(currentRange);
+          if (!currentRange) {
             currentRange = {
+              deptName: deptName,
               startDate: dStr,
               endDate: dStr,
               workDays: 1,
@@ -1319,26 +1313,65 @@
               memberIdsKey: memberIdsKey,
               count: count
             };
+          } else {
+            const prevDate = new Date(currentRange.endDate);
+            const curDate = new Date(dStr);
+            const diffDays = Math.round((curDate - prevDate) / 86400000);
+
+            if (diffDays <= 3 && currentRange.memberIdsKey === memberIdsKey) {
+              currentRange.endDate = dStr;
+              currentRange.workDays += 1;
+            } else {
+              allOverlapRanges.push(currentRange);
+              currentRange = {
+                deptName: deptName,
+                startDate: dStr,
+                endDate: dStr,
+                workDays: 1,
+                members: membersList,
+                memberIds: memberIdsSorted,
+                memberIdsKey: memberIdsKey,
+                count: count
+              };
+            }
           }
-        }
+        });
+
+        if (currentRange) allOverlapRanges.push(currentRange);
       });
 
-      if (currentRange) overlapRanges.push(currentRange);
-
-      // 套用過期 / 時程區間篩選
-      let filteredRanges = overlapRanges;
-      if (overlapOption === 'period') {
-        filteredRanges = overlapRanges.filter(r => r.startDate <= periodEndDate && r.endDate >= periodStartDate);
-      } else if (overlapOption === 'future') {
-        filteredRanges = overlapRanges.filter(r => r.endDate >= todayStr);
+      // 3. 套用個人快選過濾
+      let filteredRanges = allOverlapRanges;
+      if (activeMemberFilter !== 'all') {
+        filteredRanges = filteredRanges.filter(r => r.memberIds.includes(activeMemberFilter));
       }
+
+      // 4. 套用卡片內部篩選
+      if (overlapOption === 'period') {
+        filteredRanges = filteredRanges.filter(r => r.startDate <= periodEndDate && r.endDate >= periodStartDate);
+      } else if (overlapOption === 'future') {
+        filteredRanges = filteredRanges.filter(r => r.endDate >= todayStr);
+      }
+
+      if (filterOption === 'proxy') {
+        filteredRanges = filteredRanges.filter(r => {
+          return r.memberIds.some(aid => {
+            const am = currentData.members.find(x => x.id === aid);
+            return am && am.proxy && r.memberIds.includes(am.proxy);
+          });
+        });
+      } else if (filterOption === 'multi') {
+        filteredRanges = filteredRanges.filter(r => r.count >= 3);
+      }
+
+      filteredRanges.sort((a, b) => a.startDate.localeCompare(b.startDate));
 
       label.innerText = `${filteredRanges.length} 期重疊警示`;
 
       if (filteredRanges.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="5" class="py-6 text-center text-slate-400 font-bold">無符合條件的人力重疊記錄（歷史過期已隱藏）</td>
+            <td colspan="5" class="py-6 text-center text-slate-400 font-bold">無同部門人力重疊記錄（符合目前篩選條件）</td>
           </tr>
         `;
         return;
@@ -1357,10 +1390,7 @@
           statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap inline-block">3人同時不在</span>`;
         }
 
-        // 計算代理人資訊：使用 r.memberIds（已是 id 陣列）直接查找
         const absentIds = r.memberIds || [];
-
-        // 計算代理人
         const proxyInfoList = [];
         let hasCriticalProxy = false;
 
@@ -1389,11 +1419,18 @@
           statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-200 text-rose-900 border border-rose-400 whitespace-nowrap inline-block">⚠️ 代理人同時不在</span>`;
         }
 
+        const deptTag = activeDepartmentFilter === 'all'
+          ? `<span class="text-[10px] bg-sky-50 text-sky-700 border border-sky-200 px-1.5 py-0.5 rounded font-bold inline-block mb-1">${r.deptName}</span><br>`
+          : '';
+
         return `
           <tr class="hover:bg-slate-50 transition-colors">
             <td class="py-2.5 px-4 font-mono font-extrabold text-slate-800 whitespace-nowrap">${periodStr}</td>
             <td class="py-2.5 px-3 text-center font-mono font-bold text-slate-600">${r.workDays}</td>
-            <td class="py-2.5 px-3 font-bold text-slate-700 text-[11px]">${r.members}</td>
+            <td class="py-2.5 px-3 font-bold text-slate-700 text-[11px]">
+              ${deptTag}
+              ${r.members}
+            </td>
             <td class="py-2.5 px-3 text-[11px] whitespace-nowrap">${proxyCell}</td>
             <td class="py-2.5 px-3 text-right whitespace-nowrap">${statusBadge}</td>
           </tr>
