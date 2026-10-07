@@ -121,6 +121,10 @@
             <span class="w-4 h-3 bg-slate-200 rounded-xs"></span>
             <span class="font-bold text-slate-700">週末</span>
           </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-4 h-3 bg-sky-600 text-white font-black text-[9px] rounded-xs flex items-center justify-center">今</span>
+            <span class="font-bold text-sky-700">今天 (Today)</span>
+          </div>
           <span class="text-slate-400">｜</span>
           <span class="text-slate-500 font-mono text-[11px]">工作日 = 扣除週末與國定假日</span>
         </div>
@@ -844,11 +848,13 @@
       select.innerHTML = html;
     }
 
-    // 核心 1：【時程總覽】甘特圖 (精緻縮小左上角單元格，修復年月跨欄對齊)
+    // 核心 1：【時程總覽】甘特圖 (精緻縮小左上角單元格，修復年月跨欄對齊，醒目標註今天)
     function renderGanttTimeline() {
       const container = document.getElementById('ganttTimelineContainer');
       const footer = document.getElementById('holidayLegendFooter');
       
+      const todayStr = formatDateStr(SYSTEM_TODAY.getFullYear(), SYSTEM_TODAY.getMonth(), SYSTEM_TODAY.getDate());
+
       const m1 = currentMonth;
       const y1 = currentYear;
       const daysInM1 = new Date(y1, m1 + 1, 0).getDate();
@@ -910,18 +916,20 @@
       allDays.forEach(d => {
         const isWeekend = (d.dayOfWeek === 0 || d.dayOfWeek === 6);
         const isHoliday = !!d.holiday;
+        const isToday = (d.dateStr === todayStr);
 
         let colBg = "bg-white text-slate-700";
-        if (isHoliday) colBg = "bg-rose-100/80 text-rose-700 font-extrabold";
+        if (isToday) colBg = "bg-sky-600 text-white font-extrabold shadow-sm ring-2 ring-sky-600 z-10 rounded-t relative";
+        else if (isHoliday) colBg = "bg-rose-100/80 text-rose-700 font-extrabold";
         else if (isWeekend) colBg = "bg-slate-100/90 text-slate-400";
 
         headerHtml += `
-          <div title="${d.holiday ? d.holiday.name : ''}" style="height:38px;" class="px-0 text-center border-r border-slate-200 select-none ${colBg} flex flex-col items-center justify-center">
+          <div title="${isToday ? '今天 (Today)' : (d.holiday ? d.holiday.name : '')}" style="height:38px;" class="px-0 text-center border-r border-slate-200 select-none ${colBg} flex flex-col items-center justify-center">
             <div class="font-extrabold text-[14px] leading-none flex items-center justify-center space-x-0.5">
               <span>${d.day}</span>
-              ${isHoliday ? '<span class="w-1 h-1 rounded-full bg-rose-500 ml-0.5"></span>' : ''}
+              ${isToday ? '<span class="px-0.5 bg-amber-400 text-slate-900 text-[8px] font-black rounded ml-0.5 leading-tight">今</span>' : (isHoliday ? '<span class="w-1 h-1 rounded-full bg-rose-500 ml-0.5"></span>' : '')}
             </div>
-            <div class="text-[10px] opacity-70 leading-none mt-0.5">${['日','一','二','三','四','五','六'][d.dayOfWeek]}</div>
+            <div class="text-[10px] ${isToday ? 'opacity-100 font-bold text-amber-200' : 'opacity-70'} leading-none mt-0.5">${['日','一','二','三','四','五','六'][d.dayOfWeek]}</div>
           </div>
         `;
       });
@@ -948,10 +956,15 @@
       allDays.forEach(d => {
         const isWeekend = (d.dayOfWeek === 0 || d.dayOfWeek === 6);
         const isHoliday = !!d.holiday;
+        const isToday = (d.dateStr === todayStr);
+
         let bg = "bg-white";
         let dot = "";
 
-        if (isHoliday) {
+        if (isToday) {
+          bg = "bg-sky-500 text-white font-black text-[9px]";
+          dot = "今";
+        } else if (isHoliday) {
           bg = "bg-rose-100/70";
           dot = `<span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>`;
         } else if (isWeekend) {
@@ -991,15 +1004,18 @@
 
             <!-- 右側時間軸甘特軌道 -->
             <div class="relative w-full h-10">
-              <!-- 底層背景網格 (週末灰底、國定假粉紅底) -->
+              <!-- 底層背景網格 (週末灰底、國定假粉紅底、今天藍底直向高亮) -->
               <div class="grid w-full h-full" style="grid-template-columns: repeat(${allDays.length}, minmax(30px, 1fr));">
         `;
 
         allDays.forEach(d => {
           const isWeekend = (d.dayOfWeek === 0 || d.dayOfWeek === 6);
           const isHoliday = !!d.holiday;
+          const isToday = (d.dateStr === todayStr);
+
           let cellBg = "bg-white";
-          if (isHoliday) cellBg = "bg-rose-50/60";
+          if (isToday) cellBg = "bg-sky-100/90 border-x-2 border-sky-500/80 z-0";
+          else if (isHoliday) cellBg = "bg-rose-50/60";
           else if (isWeekend) cellBg = "bg-slate-100/50";
 
           rowsHtml += `<div class="border-r border-slate-200/80 h-full ${cellBg}"></div>`;
