@@ -647,6 +647,12 @@
               儲存連線
             </button>
           </div>
+          <div class="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
+            <span>⚡ 已內建團隊共用 API，點開網頁即自動同步（每 20 秒及分頁切換時自動更新）。</span>
+            <button onclick="resetOfficialCloudApiUrl()" type="button" class="text-sky-600 hover:text-sky-700 underline font-semibold shrink-0 ml-2">
+              還原團隊預設網址
+            </button>
+          </div>
         </div>
 
         <!-- 手動操作區 -->
@@ -932,7 +938,26 @@ function doPost(e) {
     }
 
     // 雲端同步系統變數與邏輯
-    let cloudApiUrl = localStorage.getItem('team_calendar_cloud_api_url') || '';
+    // 全團隊預設 Google Apps Script Web App API 網址 (開箱即用、免個別手動設定)
+    const OFFICIAL_CLOUD_API_URL = 'https://script.google.com/macros/s/AKfycbwY_mtSHDBm2hleUGlBlcLjuV9Zk2nqUfqR4nV3nELCH4yu-fYWO3rTS0V5dxeccg/exec';
+    let cloudApiUrl = localStorage.getItem('team_calendar_cloud_api_url') || OFFICIAL_CLOUD_API_URL;
+    let cloudSyncTimer = null;
+
+    // 檢查是否有任何彈窗正在開啟中（避免背景同步強制刷新打斷使用者操作）
+    function isAnyModalOpen() {
+      const modalIds = [
+        'eventModal',
+        'memberModal',
+        'manageMembersModal',
+        'batchDeptModal',
+        'adminLockModal',
+        'cloudSyncModal'
+      ];
+      return modalIds.some(id => {
+        const el = document.getElementById(id);
+        return el && !el.classList.contains('hidden');
+      });
+    }
 
     function updateCloudStatusUI(status, message) {
       const btn = document.getElementById('cloudStatusBtn');
@@ -949,7 +974,7 @@ function doPost(e) {
         text.innerText = message || '🟢 雲端已同步';
         if (badge) {
           badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
-          badge.innerText = "已連線雲端";
+          badge.innerText = "已連線雲端 (自動同步中)";
         }
       } else if (status === 'syncing') {
         btn.className = "flex items-center space-x-1.5 px-3 py-1.5 bg-sky-50 text-sky-700 text-xs font-bold rounded-lg border border-sky-300 transition-all";
@@ -978,23 +1003,42 @@ function doPost(e) {
       lucide.createIcons();
     }
 
-    async function fetchCloudDataSilently() {
+    async function fetchCloudDataSilently(isBackground = false) {
       if (!cloudApiUrl) {
         updateCloudStatusUI('none');
         return false;
       }
 
-      updateCloudStatusUI('syncing', '從雲端同步中...');
+      // 背景自動更新時，若使用者正在編輯或開啟彈窗，暫緩更新避免打斷操作
+      if (isBackground && isAnyModalOpen()) {
+        return false;
+      }
+
+      if (!isBackground) {
+        updateCloudStatusUI('syncing', '從雲端同步中...');
+      }
 
       try {
-        const response = await fetch(cloudApiUrl, { method: 'GET' });
+        // 加上時間戳記 cache-busting，防止瀏覽器 HTTP 快取傳回舊資料
+        const sep = cloudApiUrl.includes('?') ? '&' : '?';
+        const fetchUrl = `${cloudApiUrl}${sep}_t=${Date.now()}`;
+        const response = await fetch(fetchUrl, {
+          method: 'GET',
+          cache: 'no-store',
+          headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
+        });
         if (!response.ok) throw new Error('HTTP status ' + response.status);
         const data = await response.json();
 
         if (data && data.members && Array.isArray(data.members) && data.events && Array.isArray(data.events)) {
-          currentData = data;
-          localStorage.setItem('team_calendar_data_v4', JSON.stringify(currentData));
-          refreshAll();
+          // 比對雲端資料是否有變更
+          const newDataStr = JSON.stringify(data);
+          const oldDataStr = JSON.stringify(currentData);
+          if (newDataStr !== oldDataStr) {
+            currentData = data;
+            localStorage.setItem('team_calendar_data_v4', newDataStr);
+            refreshAll();
+          }
           const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           updateCloudStatusUI('synced', `🟢 雲端已同步 (${nowStr})`);
           return true;
@@ -1002,12 +1046,14 @@ function doPost(e) {
           await pushDataToCloudSilently();
           return true;
         } else {
-          updateCloudStatusUI('error', '雲端資料格式無效');
+          if (!isBackground) updateCloudStatusUI('error', '雲端資料格式無效');
           return false;
         }
       } catch (err) {
         console.warn('雲端讀取失敗，降級使用本地快取:', err);
-        updateCloudStatusUI('error', '連線失敗 (離線快取)');
+        if (!isBackground) {
+          updateCloudStatusUI('error', '連線失敗 (離線快取)');
+        }
         return false;
       }
     }
@@ -1047,19 +1093,12 @@ function doPost(e) {
 
     async function saveCloudApiUrl() {
       const url = document.getElementById('cloudApiUrlInput').value.trim();
-      cloudApiUrl = url;
-      localStorage.setItem('team_calendar_cloud_api_url', url);
+      cloudApiUrl = url || OFFICIAL_CLOUD_API_URL;
+      localStorage.setItem('team_calendar_cloud_api_url', cloudApiUrl);
       
-      if (!url) {
-        alert("已清除雲端 API 網址，系統將恢復為單機本機模式。");
-        updateCloudStatusUI('none');
-        closeCloudSyncModal();
-        return;
-      }
-
-      const success = await fetchCloudDataSilently();
+      const success = await fetchCloudDataSilently(false);
       if (success) {
-        alert("🎉 雲端連線成功！全團隊現在已開啟零操作自動同步模式！");
+        alert("🎉 雲端連線成功！全團隊已啟動自動即時同步！");
         closeCloudSyncModal();
       } else {
         if (confirm("連線測試失敗。是否強制將目前的本機資料推送到此雲端網址？")) {
@@ -1074,9 +1113,17 @@ function doPost(e) {
       }
     }
 
+    function resetOfficialCloudApiUrl() {
+      document.getElementById('cloudApiUrlInput').value = OFFICIAL_CLOUD_API_URL;
+      cloudApiUrl = OFFICIAL_CLOUD_API_URL;
+      localStorage.setItem('team_calendar_cloud_api_url', OFFICIAL_CLOUD_API_URL);
+      fetchCloudDataSilently(false);
+      alert("已還原為全團隊預設 Google Apps Script API 連線！");
+    }
+
     async function manualPullFromCloud() {
       if (!cloudApiUrl) { alert("請先輸入並儲存 Google Apps Script API 網址！"); return; }
-      const success = await fetchCloudDataSilently();
+      const success = await fetchCloudDataSilently(false);
       if (success) alert("成功從雲端同步最新數據！");
     }
 
@@ -1085,6 +1132,24 @@ function doPost(e) {
       const success = await pushDataToCloudSilently();
       if (success) alert("成功將目前資料推送到雲端！");
     }
+
+    // 啟動背景定期輪詢（每 20 秒）與視窗喚醒自動同步
+    function startAutoCloudSync() {
+      if (cloudSyncTimer) clearInterval(cloudSyncTimer);
+      cloudSyncTimer = setInterval(() => {
+        fetchCloudDataSilently(true);
+      }, 20000);
+    }
+
+    // 當使用者切換回到該分頁或聚焦視窗時，立即背景自動拉取最新資料
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        fetchCloudDataSilently(true);
+      }
+    });
+    window.addEventListener('focus', () => {
+      fetchCloudDataSilently(true);
+    });
 
     function copyGasCode() {
       const code = document.getElementById('gasCodeBlock').innerText;
@@ -1218,7 +1283,10 @@ function doPost(e) {
       }
 
       refreshAll();
-      fetchCloudDataSilently();
+      // 初次載入立即同步雲端最新數據，並啟動背景自動輪詢與頁面喚醒更新
+      fetchCloudDataSilently(false).then(() => {
+        startAutoCloudSync();
+      });
     });
 
     // 重新繪製畫面
