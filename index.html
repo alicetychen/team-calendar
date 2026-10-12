@@ -940,7 +940,14 @@ function doPost(e) {
     // 雲端同步系統變數與邏輯
     // 全團隊預設 Google Apps Script Web App API 網址 (開箱即用、免個別手動設定)
     const OFFICIAL_CLOUD_API_URL = 'https://script.google.com/macros/s/AKfycbwY_mtSHDBm2hleUGlBlcLjuV9Zk2nqUfqR4nV3nELCH4yu-fYWO3rTS0V5dxeccg/exec';
-    let cloudApiUrl = localStorage.getItem('team_calendar_cloud_api_url') || OFFICIAL_CLOUD_API_URL;
+    function getValidCloudApiUrl() {
+      const saved = (localStorage.getItem('team_calendar_cloud_api_url') || '').trim();
+      if (saved && saved.startsWith('https://script.google.com/') && saved.includes('/exec')) {
+        return saved;
+      }
+      return OFFICIAL_CLOUD_API_URL;
+    }
+    let cloudApiUrl = getValidCloudApiUrl();
     let cloudSyncTimer = null;
 
     // 檢查是否有任何彈窗正在開啟中（避免背景同步強制刷新打斷使用者操作）
@@ -1024,8 +1031,7 @@ function doPost(e) {
         const fetchUrl = `${cloudApiUrl}${sep}_t=${Date.now()}`;
         const response = await fetch(fetchUrl, {
           method: 'GET',
-          cache: 'no-store',
-          headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
+          mode: 'cors'
         });
         if (!response.ok) throw new Error('HTTP status ' + response.status);
         const data = await response.json();
