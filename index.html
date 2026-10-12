@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>DC 團隊請假／出差行事曆 | Product Project Management Section</title>
+  <title>DC 團隊行事曆 | Product Project Management Section</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons CDN -->
@@ -68,7 +68,7 @@
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div class="flex items-center space-x-3">
-            <h1 class="text-3xl font-black text-slate-900 tracking-tight">DC 團隊請假／出差行事曆</h1>
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight">DC 團隊行事曆</h1>
           </div>
         </div>
 
@@ -86,9 +86,8 @@
             <span id="cloudStatusText">☁️ 全團隊自動同步</span>
           </button>
 
-          <!-- 成員管理按鈕 (權限控制) -->
-          <button onclick="openManageMembersModal()" id="btnManageMembers" class="admin-only hidden flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition-colors">
-            <i data-lucide="users-cog" class="w-3.5 h-3.5 text-slate-600"></i>
+          <!-- 成員管理按鈕 (權限控制，已移除前端多餘空白) -->
+          <button onclick="openManageMembersModal()" id="btnManageMembers" class="admin-only hidden flex items-center justify-center px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition-colors">
             <span>調整組織成員</span>
           </button>
 
@@ -428,8 +427,8 @@
     <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-100 overflow-hidden">
       <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-          <i data-lucide="users-cog" class="w-4 h-4 text-sky-600"></i>
-          調整團隊組織成員 (DC Business Dept. / PPM Section)
+          <i data-lucide="users" class="w-4 h-4 text-sky-600"></i>
+          調整團隊組織成員
         </h3>
         <button onclick="closeManageMembersModal()" class="text-slate-400 hover:text-slate-600 rounded-lg p-1 hover:bg-slate-100">
           <i data-lucide="x" class="w-4 h-4"></i>
@@ -437,7 +436,25 @@
       </div>
 
       <div class="p-5 space-y-4 text-xs">
-        <div class="flex items-center justify-between">
+        <!-- 一鍵批次調整部門資訊工具列 -->
+        <div class="bg-sky-50/90 border border-sky-200 rounded-xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-extrabold text-sky-900 text-xs flex items-center gap-1.5">
+              <i data-lucide="building-2" class="w-3.5 h-3.5 text-sky-600"></i>
+              一鍵調整全體部門資訊：
+            </span>
+            <span class="text-[10px] text-sky-600 font-bold">批次統一所有成員之部門</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <input type="text" id="batchDeptInput" list="deptDatalist" placeholder="輸入新部門名稱 (例: Product Project Management Section)" class="flex-1 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 text-xs font-bold focus:ring-2 focus:ring-sky-500 focus:outline-none shadow-2xs">
+            <button type="button" onclick="batchUpdateDepartment()" class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg text-xs whitespace-nowrap shadow-xs transition-colors flex items-center gap-1">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              一鍵套用
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
           <span class="text-slate-500 font-bold">目前組織在編成員名冊：</span>
           <button onclick="openAddMemberModal()" class="px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-bold flex items-center gap-1 shadow-xs">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
@@ -2037,9 +2054,36 @@ function doPost(e) {
         openAdminLoginModal();
         return;
       }
+
+      // 預設填入目前團隊成員最常用的部門
+      const defaultDept = (currentData.members[0] && (currentData.members[0].org || currentData.members[0].dept)) || currentData.department || '';
+      const batchInput = document.getElementById('batchDeptInput');
+      if (batchInput) batchInput.value = defaultDept;
+
       renderManageMembersList();
       document.getElementById('manageMembersModal').classList.remove('hidden');
       lucide.createIcons();
+    }
+
+    function batchUpdateDepartment() {
+      const input = document.getElementById('batchDeptInput');
+      if (!input) return;
+      const newDept = input.value.trim();
+      if (!newDept) {
+        alert("請先輸入新的部門名稱！");
+        return;
+      }
+      if (confirm(`確定要將全部 ${currentData.members.length} 位成員的所屬部門一鍵統整為：\n「${newDept}」嗎？`)) {
+        currentData.department = newDept;
+        currentData.members.forEach(m => {
+          m.org = newDept;
+          m.dept = newDept;
+        });
+        saveData();
+        renderManageMembersList();
+        populateDepartmentSelectOptions();
+        alert(`🎉 已成功將全體成員的部門資訊統一調整為：\n${newDept}`);
+      }
     }
 
     function closeManageMembersModal() {
