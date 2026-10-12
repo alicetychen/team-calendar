@@ -436,21 +436,38 @@
       </div>
 
       <div class="p-5 space-y-4 text-xs">
-        <!-- 一鍵批次調整部門資訊工具列 -->
-        <div class="bg-sky-50/90 border border-sky-200 rounded-xl p-3 space-y-2">
+        <!-- 同部門成員批次調整工具列 -->
+        <div class="bg-sky-50/90 border border-sky-200 rounded-xl p-3.5 space-y-2.5">
           <div class="flex items-center justify-between">
             <span class="font-extrabold text-sky-900 text-xs flex items-center gap-1.5">
               <i data-lucide="building-2" class="w-3.5 h-3.5 text-sky-600"></i>
-              一鍵調整全體部門資訊：
+              同部門成員批次調整：
             </span>
-            <span class="text-[10px] text-sky-600 font-bold">批次統一所有成員之部門</span>
+            <span class="text-[10px] text-sky-600 font-bold">選取特定部門，同步調整該部門成員</span>
           </div>
-          <div class="flex items-center space-x-2">
-            <input type="text" id="batchDeptInput" list="deptDatalist" placeholder="輸入新部門名稱 (例: Product Project Management Section)" class="flex-1 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 text-xs font-bold focus:ring-2 focus:ring-sky-500 focus:outline-none shadow-2xs">
-            <button type="button" onclick="batchUpdateDepartment()" class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg text-xs whitespace-nowrap shadow-xs transition-colors flex items-center gap-1">
-              <i data-lucide="check" class="w-3.5 h-3.5"></i>
-              一鍵套用
-            </button>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <!-- 選擇欲調整的現有部門 -->
+            <div class="sm:col-span-5">
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">1. 選擇要調整的部門</label>
+              <select id="batchSourceDeptSelect" onchange="onSourceDeptChange(this.value)" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 text-xs font-bold focus:ring-2 focus:ring-sky-500 focus:outline-none shadow-2xs truncate">
+                <!-- 動態載入部門選項 (含人數) -->
+              </select>
+            </div>
+
+            <!-- 輸入新部門名稱 -->
+            <div class="sm:col-span-5">
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">2. 調整為新部門名稱</label>
+              <input type="text" id="batchTargetDeptInput" list="deptDatalist" placeholder="輸入或修改部門名稱" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 text-xs font-bold focus:ring-2 focus:ring-sky-500 focus:outline-none shadow-2xs">
+            </div>
+
+            <!-- 操作按鈕 -->
+            <div class="sm:col-span-2 flex items-end">
+              <button type="button" onclick="batchUpdateDepartment()" class="w-full py-1.5 px-2 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg text-xs whitespace-nowrap shadow-xs transition-colors flex items-center justify-center gap-1">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                套用調整
+              </button>
+            </div>
           </div>
         </div>
 
@@ -2055,34 +2072,80 @@ function doPost(e) {
         return;
       }
 
-      // 預設填入目前團隊成員最常用的部門
-      const defaultDept = (currentData.members[0] && (currentData.members[0].org || currentData.members[0].dept)) || currentData.department || '';
-      const batchInput = document.getElementById('batchDeptInput');
-      if (batchInput) batchInput.value = defaultDept;
-
+      populateBatchDeptOptions();
       renderManageMembersList();
       document.getElementById('manageMembersModal').classList.remove('hidden');
       lucide.createIcons();
     }
 
+    function populateBatchDeptOptions(selectedDept = null) {
+      const select = document.getElementById('batchSourceDeptSelect');
+      const input = document.getElementById('batchTargetDeptInput');
+      if (!select || !input) return;
+
+      const depts = Array.from(new Set(currentData.members.map(m => (m.org || m.dept || '未指派部門').trim()).filter(Boolean)));
+      if (depts.length === 0) depts.push('未指派部門');
+
+      select.innerHTML = depts.map(d => {
+        const count = currentData.members.filter(m => (m.org || m.dept || '未指派部門').trim() === d).length;
+        return `<option value="${d}">${d} (${count}人)</option>`;
+      }).join('');
+
+      const targetDept = (selectedDept && depts.includes(selectedDept)) ? selectedDept : depts[0];
+      select.value = targetDept;
+      input.value = targetDept;
+    }
+
+    function onSourceDeptChange(selectedDept) {
+      const input = document.getElementById('batchTargetDeptInput');
+      if (input) input.value = selectedDept;
+    }
+
+    function selectDeptToBatchUpdate(deptName) {
+      populateBatchDeptOptions(deptName);
+      const input = document.getElementById('batchTargetDeptInput');
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }
+
     function batchUpdateDepartment() {
-      const input = document.getElementById('batchDeptInput');
-      if (!input) return;
-      const newDept = input.value.trim();
-      if (!newDept) {
-        alert("請先輸入新的部門名稱！");
+      const sourceSelect = document.getElementById('batchSourceDeptSelect');
+      const targetInput = document.getElementById('batchTargetDeptInput');
+      if (!sourceSelect || !targetInput) return;
+
+      const sourceDept = sourceSelect.value.trim();
+      const targetDept = targetInput.value.trim();
+
+      if (!targetDept) {
+        alert("請先輸入要調整的新部門名稱！");
         return;
       }
-      if (confirm(`確定要將全部 ${currentData.members.length} 位成員的所屬部門一鍵統整為：\n「${newDept}」嗎？`)) {
-        currentData.department = newDept;
-        currentData.members.forEach(m => {
-          m.org = newDept;
-          m.dept = newDept;
+
+      if (sourceDept === targetDept) {
+        alert("新部門名稱與原部門名稱相同，若要調整請輸入新的名稱！");
+        return;
+      }
+
+      const targetMembers = currentData.members.filter(m => (m.org || m.dept || '未指派部門').trim() === sourceDept);
+      if (targetMembers.length === 0) {
+        alert("找不到屬於該部門的成員！");
+        return;
+      }
+
+      const memberNames = targetMembers.map(m => m.name).join('、');
+      if (confirm(`確定要將【${sourceDept}】的 ${targetMembers.length} 位成員：\n${memberNames}\n\n統一調整為新部門：\n「${targetDept}」嗎？\n（其他部門之成員將不受影響）`)) {
+        targetMembers.forEach(m => {
+          m.org = targetDept;
+          m.dept = targetDept;
         });
+
         saveData();
+        populateBatchDeptOptions(targetDept);
         renderManageMembersList();
         populateDepartmentSelectOptions();
-        alert(`🎉 已成功將全體成員的部門資訊統一調整為：\n${newDept}`);
+        alert(`🎉 成功！已將【${sourceDept}】的 ${targetMembers.length} 位成員部門統一調整為：\n${targetDept}`);
       }
     }
 
@@ -2092,27 +2155,56 @@ function doPost(e) {
 
     function renderManageMembersList() {
       const container = document.getElementById('modalMemberList');
-      container.innerHTML = currentData.members.map(m => `
-        <div class="p-2.5 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between">
-          <div class="flex items-center space-x-3 min-w-0 flex-1">
-            <div class="w-7 h-7 rounded-full text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0" style="background-color: ${m.color}">
-              ${m.avatar}
+      if (!container) return;
+
+      // 依部門分組 (Group by Department)
+      const depts = Array.from(new Set(currentData.members.map(m => (m.org || m.dept || '未指派部門').trim()).filter(Boolean)));
+      
+      container.innerHTML = depts.map(deptName => {
+        const deptMembers = currentData.members.filter(m => (m.org || m.dept || '未指派部門').trim() === deptName);
+        return `
+          <div class="bg-slate-50 border border-slate-200/90 rounded-xl p-3 space-y-2">
+            <!-- 部門分組標題列 -->
+            <div class="flex items-center justify-between pb-1.5 border-b border-slate-200">
+              <div class="flex items-center space-x-1.5 font-black text-slate-800 text-xs">
+                <i data-lucide="building" class="w-3.5 h-3.5 text-sky-600"></i>
+                <span>${deptName}</span>
+                <span class="text-[10px] font-bold text-sky-700 bg-sky-100 px-1.5 py-0.5 rounded-full">${deptMembers.length} 人</span>
+              </div>
+              <button type="button" onclick="selectDeptToBatchUpdate('${deptName}')" class="text-[11px] font-bold text-sky-600 hover:text-sky-800 hover:underline flex items-center gap-1">
+                調整此部門成員 ➔
+              </button>
             </div>
-            <div class="min-w-0">
-              <div class="font-bold text-xs text-slate-900">${m.fullName || (m.name + ' (' + m.chineseName + ')')}</div>
-              <div class="text-[10px] text-slate-400 truncate">${m.role}${m.org ? ' · <span class="text-sky-500">' + m.org + '</span>' : ''}</div>
+
+            <!-- 該部門成員卡片列表 -->
+            <div class="space-y-1.5">
+              ${deptMembers.map(m => `
+                <div class="p-2 rounded-lg border border-slate-200/80 bg-white flex items-center justify-between shadow-2xs">
+                  <div class="flex items-center space-x-2.5 min-w-0 flex-1">
+                    <div class="w-7 h-7 rounded-full text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0" style="background-color: ${m.color}">
+                      ${m.avatar}
+                    </div>
+                    <div class="min-w-0">
+                      <div class="font-bold text-xs text-slate-900">${m.fullName || (m.name + ' (' + m.chineseName + ')')}</div>
+                      <div class="text-[10px] text-slate-400 truncate">${m.role}</div>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-1.5 shrink-0 ml-2">
+                    <button onclick="openEditMemberModal('${m.id}')" class="px-2 py-1 text-sky-600 hover:bg-sky-50 rounded font-bold border border-sky-200 text-xs">
+                      編輯
+                    </button>
+                    <button onclick="deleteMember('${m.id}')" class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded font-bold border border-rose-200 text-xs">
+                      刪除
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
             </div>
           </div>
-          <div class="flex items-center space-x-2 shrink-0 ml-2">
-            <button onclick="openEditMemberModal('${m.id}')" class="px-2 py-1 text-sky-600 hover:bg-sky-50 rounded font-bold border border-sky-200">
-              編輯
-            </button>
-            <button onclick="deleteMember('${m.id}')" class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded font-bold border border-rose-200">
-              刪除
-            </button>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+
+      lucide.createIcons();
     }
 
     function openAddMemberModal() {
