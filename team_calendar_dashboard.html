@@ -393,10 +393,45 @@
           </div>
         </div>
 
-        <!-- 時段說明 -->
+        <!-- 時段設定 (可選整天或時段幾點到幾點模式) -->
         <div>
-          <label class="block font-semibold text-slate-700 mb-1">時段說明 (例如：整天、上午、14:00後)</label>
-          <input type="text" id="formTimeDetail" placeholder="整天 / 上午 / 14:00後..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none">
+          <label class="block font-semibold text-slate-700 mb-1.5">時段設定 *</label>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <label class="flex items-center space-x-2 border border-slate-200 rounded-lg p-2 cursor-pointer hover:bg-sky-50 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50/60 transition-colors">
+              <input type="radio" name="formTimeMode" value="allDay" checked onchange="onTimeModeChange('allDay')" class="text-sky-600 focus:ring-sky-500">
+              <span class="font-bold text-slate-800 text-xs">☀️ 整天 (全天)</span>
+            </label>
+            <label class="flex items-center space-x-2 border border-slate-200 rounded-lg p-2 cursor-pointer hover:bg-sky-50 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50/60 transition-colors">
+              <input type="radio" name="formTimeMode" value="timeRange" onchange="onTimeModeChange('timeRange')" class="text-sky-600 focus:ring-sky-500">
+              <span class="font-bold text-slate-800 text-xs">⏰ 指定時段 (幾點到幾點)</span>
+            </label>
+          </div>
+
+          <!-- 指定時段選擇區 (幾點到幾點) -->
+          <div id="timeRangeContainer" class="hidden p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            <div class="flex items-center space-x-2">
+              <div class="flex-1">
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">開始時間</label>
+                <input type="time" id="formStartTime" value="09:00" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+              </div>
+              <span class="text-slate-400 font-bold text-xs mt-3.5">至</span>
+              <div class="flex-1">
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">結束時間</label>
+                <input type="time" id="formEndTime" value="18:00" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+              </div>
+            </div>
+
+            <!-- 常見快捷時段標籤 -->
+            <div class="flex flex-wrap items-center gap-1.5 pt-1">
+              <span class="text-[10px] text-slate-400 font-bold shrink-0">快捷：</span>
+              <button type="button" onclick="setQuickTimeRange('09:00', '12:00')" class="px-2 py-0.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded text-[10px] font-bold transition-colors">上午 (09-12)</button>
+              <button type="button" onclick="setQuickTimeRange('13:00', '18:00')" class="px-2 py-0.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded text-[10px] font-bold transition-colors">下午 (13-18)</button>
+              <button type="button" onclick="setQuickTimeRange('14:00', '18:00')" class="px-2 py-0.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded text-[10px] font-bold transition-colors">14:00後</button>
+            </div>
+          </div>
+
+          <!-- 隱藏的 timeDetail 欄位，相容現有資料規格 -->
+          <input type="hidden" id="formTimeDetail" value="整天">
         </div>
 
         <!-- 備註說明 -->
@@ -1963,6 +1998,28 @@ function doPost(e) {
       }).join('');
     }
 
+    // 時段切換控制 (整天 或 指定幾點到幾點)
+    function onTimeModeChange(mode) {
+      const container = document.getElementById('timeRangeContainer');
+      const radios = document.getElementsByName('formTimeMode');
+      for (const r of radios) {
+        if (r.value === mode) r.checked = true;
+      }
+
+      if (mode === 'timeRange') {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+        document.getElementById('formTimeDetail').value = '整天';
+      }
+    }
+
+    function setQuickTimeRange(start, end) {
+      onTimeModeChange('timeRange');
+      document.getElementById('formStartTime').value = start;
+      document.getElementById('formEndTime').value = end;
+    }
+
     // Modal 1：行程新增與編輯
     function openModal(defaultDate = null) {
       if (!isAdminUnlocked) {
@@ -1978,6 +2035,10 @@ function doPost(e) {
       const today = defaultDate || formatDateStr(currentYear, currentMonth, 1);
       document.getElementById('formStartDate').value = today;
       document.getElementById('formEndDate').value = today;
+      
+      onTimeModeChange('allDay');
+      document.getElementById('formStartTime').value = '09:00';
+      document.getElementById('formEndTime').value = '18:00';
       document.getElementById('formTimeDetail').value = '整天';
 
       document.getElementById('eventModal').classList.remove('hidden');
@@ -2004,8 +2065,40 @@ function doPost(e) {
 
       document.getElementById('formStartDate').value = ev.startDate;
       document.getElementById('formEndDate').value = ev.endDate;
-      document.getElementById('formTimeDetail').value = ev.timeDetail || '整天';
       document.getElementById('formNote').value = ev.note || '';
+
+      // 解析時段 (整天 或 幾點到幾點)
+      const rawTime = (ev.timeDetail || '整天').trim();
+      document.getElementById('formTimeDetail').value = rawTime;
+
+      const timeRangeMatch = rawTime.match(/(\d{1,2}:\d{2})\s*(?:-|－|至|到)\s*(\d{1,2}:\d{2})/);
+      const singleTimeMatch = rawTime.match(/(\d{1,2}:\d{2})\s*(?:後)?/);
+
+      if (rawTime === '整天' || rawTime === '全天' || !rawTime) {
+        onTimeModeChange('allDay');
+        document.getElementById('formStartTime').value = '09:00';
+        document.getElementById('formEndTime').value = '18:00';
+      } else if (timeRangeMatch) {
+        onTimeModeChange('timeRange');
+        document.getElementById('formStartTime').value = timeRangeMatch[1].padStart(5, '0');
+        document.getElementById('formEndTime').value = timeRangeMatch[2].padStart(5, '0');
+      } else if (singleTimeMatch) {
+        onTimeModeChange('timeRange');
+        document.getElementById('formStartTime').value = singleTimeMatch[1].padStart(5, '0');
+        document.getElementById('formEndTime').value = '18:00';
+      } else if (rawTime.includes('上午')) {
+        onTimeModeChange('timeRange');
+        document.getElementById('formStartTime').value = '09:00';
+        document.getElementById('formEndTime').value = '12:00';
+      } else if (rawTime.includes('下午')) {
+        onTimeModeChange('timeRange');
+        document.getElementById('formStartTime').value = '13:00';
+        document.getElementById('formEndTime').value = '18:00';
+      } else {
+        onTimeModeChange('timeRange');
+        document.getElementById('formStartTime').value = '09:00';
+        document.getElementById('formEndTime').value = '18:00';
+      }
 
       document.getElementById('btnDeleteEvent').classList.remove('hidden');
       document.getElementById('eventModal').classList.remove('hidden');
@@ -2022,8 +2115,23 @@ function doPost(e) {
       const memberId = document.getElementById('formMemberId').value;
       const startDate = document.getElementById('formStartDate').value;
       const endDate = document.getElementById('formEndDate').value;
-      const timeDetail = document.getElementById('formTimeDetail').value;
       const note = document.getElementById('formNote').value;
+
+      // 依時段模式合成 timeDetail
+      let timeDetail = '整天';
+      const timeModeRadios = document.getElementsByName('formTimeMode');
+      let selectedTimeMode = 'allDay';
+      for (const r of timeModeRadios) {
+        if (r.checked) selectedTimeMode = r.value;
+      }
+
+      if (selectedTimeMode === 'timeRange') {
+        const startT = document.getElementById('formStartTime').value || '09:00';
+        const endT = document.getElementById('formEndTime').value || '18:00';
+        timeDetail = `${startT} - ${endT}`;
+      } else {
+        timeDetail = '整天';
+      }
 
       let type = 'leave';
       const typeRadios = document.getElementsByName('formType');
