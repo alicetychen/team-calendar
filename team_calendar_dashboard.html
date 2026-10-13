@@ -85,12 +85,6 @@
             <span>調整組織成員</span>
           </button>
 
-          <!-- 新增行程按鈕 -->
-          <button onclick="openModal()" id="btnAddEvent" class="flex items-center space-x-1.5 px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all hover:scale-[1.02]">
-            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-            <span>新增行程 / 請假</span>
-          </button>
-
           <!-- 季度與日期區間顯示框 -->
           <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1 text-right">
             <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider" id="seasonLabel">2026 秋季</div>
@@ -203,10 +197,17 @@
     <section class="bg-white rounded-xl border border-slate-200/90 shadow-xs overflow-hidden">
       <!-- 卡片標頭 -->
       <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-        <h3 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
-          <i data-lucide="calendar" class="w-4 h-4 text-sky-600"></i>
-          時程總覽
-        </h3>
+        <div class="flex items-center space-x-3">
+          <h3 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+            <i data-lucide="calendar" class="w-4 h-4 text-sky-600"></i>
+            時程總覽
+          </h3>
+          <!-- 新增行程按鈕 (已移動至時程總覽旁) -->
+          <button onclick="openModal()" id="btnAddEvent" class="flex items-center space-x-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all hover:scale-[1.02]">
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+            <span>新增行程 / 請假</span>
+          </button>
+        </div>
         <span class="text-[11px] text-slate-400 font-medium">橫向可捲動 ⇄</span>
       </div>
 
@@ -379,7 +380,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block font-semibold text-slate-700 mb-1">開始日期 *</label>
-            <input type="date" id="formStartDate" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none">
+            <input type="date" id="formStartDate" required onchange="onStartDateChange()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none">
           </div>
           <div>
             <label class="block font-semibold text-slate-700 mb-1">結束日期 *</label>
@@ -406,7 +407,7 @@
             <div class="flex items-center space-x-2">
               <div class="flex-1">
                 <label class="block text-[10px] font-bold text-slate-500 mb-0.5">開始時間</label>
-                <input type="time" id="formStartTime" value="09:00" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                <input type="time" id="formStartTime" value="09:00" onchange="onStartTimeChange()" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 focus:outline-none">
               </div>
               <span class="text-slate-400 font-bold text-xs mt-3.5">至</span>
               <div class="flex-1">
@@ -1904,6 +1905,47 @@ function doPost(e) {
       }
     }
 
+    // 開始日期與結束日期連動
+    function onStartDateChange() {
+      const startInput = document.getElementById('formStartDate');
+      const endInput = document.getElementById('formEndDate');
+      if (!startInput || !endInput) return;
+      const sVal = startInput.value;
+      if (!sVal) return;
+
+      endInput.min = sVal;
+      // 若尚未選擇結束日期或結束日期早於開始日期，自動連動同步
+      if (!endInput.value || endInput.value < sVal) {
+        endInput.value = sVal;
+      }
+    }
+
+    // 開始時間與結束時間連動
+    function onStartTimeChange() {
+      const startInput = document.getElementById('formStartTime');
+      const endInput = document.getElementById('formEndTime');
+      if (!startInput || !endInput) return;
+      const sTime = startInput.value;
+      if (!sTime) return;
+
+      endInput.min = sTime;
+      // 若結束時間早於或等於開始時間，自動連動推算合理結束時間
+      if (!endInput.value || endInput.value <= sTime) {
+        const parts = sTime.split(':').map(Number);
+        const h = parts[0];
+        const m = parts[1] || 0;
+        let endH = 18;
+        let endM = 0;
+        if (h >= 17) {
+          endH = Math.min(23, h + 1);
+          endM = m;
+        }
+        const endHStr = String(endH).padStart(2, '0');
+        const endMStr = String(endM).padStart(2, '0');
+        endInput.value = `${endHStr}:${endMStr}`;
+      }
+    }
+
     function setQuickTimeRange(start, end) {
       onTimeModeChange('timeRange');
       document.getElementById('formStartTime').value = start;
@@ -1921,6 +1963,8 @@ function doPost(e) {
       const today = defaultDate || formatDateStr(currentYear, currentMonth, 1);
       document.getElementById('formStartDate').value = today;
       document.getElementById('formEndDate').value = today;
+      onStartDateChange();
+      onStartTimeChange();
       
       onTimeModeChange('allDay');
       document.getElementById('formStartTime').value = '09:00';
@@ -1947,6 +1991,7 @@ function doPost(e) {
 
       document.getElementById('formStartDate').value = ev.startDate;
       document.getElementById('formEndDate').value = ev.endDate;
+      document.getElementById('formEndDate').min = ev.startDate;
       document.getElementById('formNote').value = ev.note || '';
 
       // 解析時段 (整天 或 幾點到幾點)
