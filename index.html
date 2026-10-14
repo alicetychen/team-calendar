@@ -937,7 +937,9 @@ function doPost(e) {
               if (!currentData.holidays.some(h => h.date === dh.date)) {
                 currentData.holidays.push(dh);
               }
-            }
+            });
+          }
+
           if (!currentData.companyEvents) {
             currentData.companyEvents = JSON.parse(JSON.stringify(DEFAULT_DATA.companyEvents));
           } else {
@@ -947,6 +949,7 @@ function doPost(e) {
               }
             });
           }
+
           // 同時確保舊資料中 memberId==='all' 的全團隊活動被移轉至 companyEvents，避免在個人甘特中重複顯示
           if (currentData.events && Array.isArray(currentData.events)) {
             const allEvs = currentData.events.filter(e => e.memberId === 'all');
@@ -962,9 +965,7 @@ function doPost(e) {
               }
             });
             currentData.events = currentData.events.filter(e => e.memberId !== 'all');
-          });
           }
-          // 相容舊版：自動補上 org, dept, fullName, proxy 欄位
           currentData.members.forEach(m => {
             if (!m.org) m.org = m.dept || "DC Business Dept. / PPM Section";
             if (!m.dept) m.dept = m.org;
