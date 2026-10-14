@@ -85,6 +85,12 @@
             <span>調整組織成員</span>
           </button>
 
+          <!-- 公司活動管理按鈕 -->
+          <button onclick="openManageCompanyEventsModal()" id="btnManageCompanyEvents" class="flex items-center space-x-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold rounded-lg border border-purple-200 transition-colors">
+            <i data-lucide="building" class="w-3.5 h-3.5 text-purple-600"></i>
+            <span>調整公司活動</span>
+          </button>
+
           <!-- 季度與日期區間顯示框 -->
           <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1 text-right">
             <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider" id="seasonLabel">2026 秋季</div>
@@ -206,6 +212,10 @@
           <button onclick="openModal()" id="btnAddEvent" class="flex items-center space-x-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all hover:scale-[1.02]">
             <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
             <span>新增行程 / 請假</span>
+          </button>
+          <button onclick="openManageCompanyEventsModal()" class="flex items-center space-x-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold rounded-lg border border-purple-200 transition-all">
+            <i data-lucide="flag" class="w-3.5 h-3.5 text-purple-600"></i>
+            <span>公司活動設定</span>
           </button>
         </div>
         <span class="text-[11px] text-slate-400 font-medium">橫向可捲動 ⇄</span>
@@ -603,6 +613,101 @@
   </div>
 
   <!-- Modal 4：全團隊雲端自動同步設定 Modal -->
+  
+  <!-- 彈出視窗 5：公司活動管理 (Company Events Modal) -->
+  <div id="companyEventsModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden no-print">
+    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
+      <!-- Header -->
+      <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-purple-50/50">
+        <h3 class="text-sm font-bold text-purple-900 flex items-center gap-2">
+          <i data-lucide="building" class="w-4 h-4 text-purple-600"></i>
+          公司重要活動管理 (Company Events)
+        </h3>
+        <button onclick="closeManageCompanyEventsModal()" class="text-slate-400 hover:text-slate-600 rounded-lg p-1 hover:bg-slate-100">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- 內容區 -->
+      <div class="p-5 space-y-4 overflow-y-auto text-xs custom-scrollbar">
+        <!-- 說明提示 -->
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 text-purple-900 flex items-start space-x-2.5">
+          <i data-lucide="info" class="w-4 h-4 text-purple-600 shrink-0 mt-0.5"></i>
+          <div class="text-[11px] leading-relaxed">
+            公司重要活動（如 Global Business Interlock、RBUSC in MHQ、Team Building 等）將以<b>專屬紫色整欄直向高亮</b>標記於甘特圖中，並於表頭與底部說明列清晰呈現。
+          </div>
+        </div>
+
+        <!-- 區塊一：現有活動清單 -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-extrabold text-slate-700 flex items-center gap-1.5">
+              <i data-lucide="calendar-days" class="w-3.5 h-3.5 text-purple-600"></i>
+              已設定之公司活動名單：
+            </span>
+            <span id="companyEventsCountBadge" class="text-[11px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">共 0 項活動</span>
+          </div>
+
+          <div id="companyEventsListContainer" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pr-1 border border-slate-100 rounded-lg p-2 bg-slate-50/50">
+            <!-- 動態生成公司活動卡片 -->
+          </div>
+        </div>
+
+        <!-- 區塊二：新增 / 編輯活動表單 -->
+        <div class="border-t border-slate-200 pt-3">
+          <div class="font-extrabold text-slate-800 mb-2 flex items-center justify-between">
+            <span id="companyEventFormHeading" class="flex items-center gap-1.5 text-xs text-purple-900">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-purple-600"></i>
+              新增公司活動
+            </span>
+            <button type="button" id="btnCancelEditCompanyEvent" onclick="resetCompanyEventForm()" class="hidden text-[11px] text-slate-500 hover:text-slate-800 underline font-semibold">
+              取消編輯 / 切換為新增
+            </button>
+          </div>
+
+          <form id="companyEventForm" onsubmit="saveCompanyEvent(event)" class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
+            <input type="hidden" id="formCompanyEventId">
+
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">活動名稱 *</label>
+              <input type="text" id="companyEventFormName" required placeholder="例：Global Business Interlock, RBUSC in MHQ" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-800 text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">開始日期 *</label>
+                <input type="date" id="companyEventFormStartDate" required onchange="onCompanyEventStartDateChange()" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">結束日期 *</label>
+                <input type="date" id="companyEventFormEndDate" required class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">備註說明 / 地點</label>
+              <input type="text" id="companyEventFormNote" placeholder="例：全球業務交流大會、總部實體會議" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-800 text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none">
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 pt-1">
+              <button type="submit" id="btnSubmitCompanyEvent" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold shadow-xs transition-colors flex items-center gap-1">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                <span id="btnSubmitCompanyEventText">儲存公司活動</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-5 py-3 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+        <button onclick="closeManageCompanyEventsModal()" class="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition-colors">
+          完成關閉
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="cloudSyncModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 hidden no-print p-4">
     <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
       <!-- Header -->
@@ -725,6 +830,11 @@ function doPost(e) {
     // 預設資料集 (含台灣國定假日)
     const DEFAULT_DATA = {
       department: "DC Business Dept.",
+      companyEvents: [
+        { id: "ce-gbi", name: "Global Business Interlock", startDate: "2026-10-12", endDate: "2026-10-16", note: "全球業務交流大會" },
+        { id: "ce-rbusc", name: "RBUSC in MHQ", startDate: "2026-10-19", endDate: "2026-10-20", note: "總部實體會議" },
+        { id: "ce-tb", name: "Team Building", startDate: "2026-09-18", endDate: "2026-09-18", note: "團隊凝聚活動" }
+      ],
       section: "Product Project Management Section",
       members: [
         { id: "misa",   name: "Misa Wang",      fullName: "Misa Wang (王志慧)",        chineseName: "王志慧", role: "主管 (Section Manager)",     org: "DC Business Dept. / PPM Section", proxy: "olivia", color: "#8b5cf6", avatar: "MW" },
@@ -827,7 +937,32 @@ function doPost(e) {
               if (!currentData.holidays.some(h => h.date === dh.date)) {
                 currentData.holidays.push(dh);
               }
+            }
+          if (!currentData.companyEvents) {
+            currentData.companyEvents = JSON.parse(JSON.stringify(DEFAULT_DATA.companyEvents));
+          } else {
+            DEFAULT_DATA.companyEvents.forEach(de => {
+              if (!currentData.companyEvents.some(e => e.name === de.name && e.startDate === de.startDate)) {
+                currentData.companyEvents.push(de);
+              }
             });
+          }
+          // 同時確保舊資料中 memberId==='all' 的全團隊活動被移轉至 companyEvents，避免在個人甘特中重複顯示
+          if (currentData.events && Array.isArray(currentData.events)) {
+            const allEvs = currentData.events.filter(e => e.memberId === 'all');
+            allEvs.forEach(ae => {
+              if (!currentData.companyEvents.some(ce => ce.name === ae.note && ce.startDate === ae.startDate)) {
+                currentData.companyEvents.push({
+                  id: "ce-" + ae.id,
+                  name: ae.note || "公司活動",
+                  startDate: ae.startDate,
+                  endDate: ae.endDate,
+                  note: ae.note || ""
+                });
+              }
+            });
+            currentData.events = currentData.events.filter(e => e.memberId !== 'all');
+          });
           }
           // 相容舊版：自動補上 org, dept, fullName, proxy 欄位
           currentData.members.forEach(m => {
@@ -883,7 +1018,8 @@ function doPost(e) {
         'memberModal',
         'manageMembersModal',
         'batchDeptModal',
-        'cloudSyncModal'
+        'cloudSyncModal',
+        'companyEventsModal'
       ];
       return modalIds.some(id => {
         const el = document.getElementById(id);
@@ -1014,12 +1150,14 @@ function doPost(e) {
 
     function openCloudSyncModal() {
       document.getElementById('cloudApiUrlInput').value = cloudApiUrl;
-      document.getElementById('cloudSyncModal').classList.remove('hidden');
+      document.getElementById('cloudSyncModal',
+        'companyEventsModal').classList.remove('hidden');
       lucide.createIcons();
     }
 
     function closeCloudSyncModal() {
-      document.getElementById('cloudSyncModal').classList.add('hidden');
+      document.getElementById('cloudSyncModal',
+        'companyEventsModal').classList.add('hidden');
     }
 
     async function saveCloudApiUrl() {
@@ -1137,6 +1275,16 @@ function doPost(e) {
     function getHoliday(dateStr) {
       if (!currentData.holidays) return null;
       return currentData.holidays.find(h => h.date === dateStr);
+    }
+
+    function getCompanyEvent(dateStr) {
+      if (!currentData.companyEvents) return null;
+      return currentData.companyEvents.find(e => dateStr >= e.startDate && dateStr <= e.endDate);
+    }
+
+    function getCompanyEventsInRange(startRangeStr, endRangeStr) {
+      if (!currentData.companyEvents) return [];
+      return currentData.companyEvents.filter(e => !(e.endDate < startRangeStr || e.startDate > endRangeStr));
     }
 
     function isEventOnDate(event, dateStr) {
@@ -1321,7 +1469,7 @@ function doPost(e) {
       const y2 = m1 === 11 ? y1 + 1 : y1;
       const daysInM2 = new Date(y2, m2 + 1, 0).getDate();
 
-      // 建構所有日期陣列
+      // 建構所有日期陣列 (含國定假日與公司活動)
       const allDays = [];
       for (let d = 1; d <= daysInM1; d++) {
         const dStr = formatDateStr(y1, m1, d);
@@ -1333,7 +1481,8 @@ function doPost(e) {
           monthIndex: m1,
           day: d,
           dayOfWeek: dt.getDay(),
-          holiday: getHoliday(dStr)
+          holiday: getHoliday(dStr),
+          companyEvent: getCompanyEvent(dStr)
         });
       }
 
@@ -1347,7 +1496,8 @@ function doPost(e) {
           monthIndex: m2,
           day: d,
           dayOfWeek: dt.getDay(),
-          holiday: getHoliday(dStr)
+          holiday: getHoliday(dStr),
+          companyEvent: getCompanyEvent(dStr)
         });
       }
 
@@ -1357,7 +1507,7 @@ function doPost(e) {
           <!-- 左上角空白欄 -->
           <div class="bg-slate-50 border-r border-slate-200 sticky left-0 z-30 shadow-2xs" style="height:26px;"></div>
           
-          <!-- 第一層：年月分區 (使用 style 定義跨欄) -->
+          <!-- 第一層：年月分區 -->
           <div style="grid-column: span ${daysInM1} / span ${daysInM1}; height:26px;" class="bg-slate-50 font-extrabold text-sm text-slate-700 px-2 border-r border-b border-slate-200 flex items-center justify-center">
             ${y1} 年 ${m1 + 1} 月
           </div>
@@ -1366,7 +1516,7 @@ function doPost(e) {
           </div>
         </div>
 
-        <!-- 第二層：日期與星期 -->
+        <!-- 第二層：日期與星期 (標註國定假日與公司活動) -->
         <div class="grid border-b border-slate-200" style="grid-template-columns: 160px repeat(${allDays.length}, minmax(30px, 1fr));">
           <div class="bg-slate-50 border-r border-slate-200 sticky left-0 z-30" style="height:38px;"></div>
       `;
@@ -1374,18 +1524,33 @@ function doPost(e) {
       allDays.forEach(d => {
         const isWeekend = (d.dayOfWeek === 0 || d.dayOfWeek === 6);
         const isHoliday = !!d.holiday;
+        const isCompanyEvent = !!d.companyEvent;
         const isToday = (d.dateStr === todayStr);
 
         let colBg = "bg-white text-slate-700";
-        if (isToday) colBg = "bg-sky-600 text-white font-extrabold shadow-sm ring-2 ring-sky-600 z-10 rounded-t relative";
-        else if (isHoliday) colBg = "bg-rose-100/80 text-rose-700 font-extrabold";
-        else if (isWeekend) colBg = "bg-slate-100/90 text-slate-400";
+        let dotHtml = "";
+        let tooltipText = "";
+
+        if (isToday) {
+          colBg = "bg-sky-600 text-white font-extrabold shadow-sm ring-2 ring-sky-600 z-10 rounded-t relative";
+          tooltipText = "今天 (Today)";
+        } else if (isHoliday) {
+          colBg = "bg-rose-100/80 text-rose-700 font-extrabold";
+          dotHtml = '<span class="w-1.5 h-1.5 rounded-full bg-rose-500 ml-0.5" title="國定假日: ' + d.holiday.name + '"></span>';
+          tooltipText = `國定假日: ${d.holiday.name}`;
+        } else if (isCompanyEvent) {
+          colBg = "bg-purple-100 text-purple-900 font-extrabold";
+          dotHtml = '<span class="w-1.5 h-1.5 rounded-full bg-purple-600 ml-0.5" title="公司活動: ' + d.companyEvent.name + '"></span>';
+          tooltipText = `公司活動: ${d.companyEvent.name}${d.companyEvent.note ? ' (' + d.companyEvent.note + ')' : ''}`;
+        } else if (isWeekend) {
+          colBg = "bg-slate-100/90 text-slate-400";
+        }
 
         headerHtml += `
-          <div title="${isToday ? '今天 (Today)' : (d.holiday ? d.holiday.name : '')}" style="height:38px;" class="px-0 text-center border-r border-slate-200 select-none ${colBg} flex flex-col items-center justify-center">
+          <div title="${tooltipText}" style="height:38px;" class="px-0 text-center border-r border-slate-200 select-none ${colBg} flex flex-col items-center justify-center">
             <div class="font-extrabold text-[14px] leading-none flex items-center justify-center space-x-0.5">
               <span>${d.day}</span>
-              ${isHoliday ? '<span class="w-1 h-1 rounded-full bg-rose-500 ml-0.5"></span>' : ''}
+              ${dotHtml}
             </div>
             <div class="text-[10px] ${isToday ? 'opacity-100 font-extrabold text-white' : 'opacity-70'} leading-none mt-0.5">${['日','一','二','三','四','五','六'][d.dayOfWeek]}</div>
           </div>
@@ -1404,16 +1569,17 @@ function doPost(e) {
 
       let rowsHtml = '';
 
-      // 專用「假日/國定假日」提示列 (置頂於第一個成員前)
+      // 專用「假日 / 公司活動」提示列 (置頂於第一個成員前)
       rowsHtml += `
         <div class="grid border-b border-slate-200 h-5" style="grid-template-columns: 160px repeat(${allDays.length}, minmax(30px, 1fr));">
-          <div class="px-2.5 bg-slate-50 font-bold text-[10px] text-slate-400 border-r border-slate-200 sticky left-0 z-20 shadow-xs flex items-center">
-            假日
+          <div class="px-2.5 bg-slate-50 font-bold text-[10px] text-slate-500 border-r border-slate-200 sticky left-0 z-20 shadow-xs flex items-center">
+            假日 / 活動
           </div>
       `;
       allDays.forEach(d => {
         const isWeekend = (d.dayOfWeek === 0 || d.dayOfWeek === 6);
         const isHoliday = !!d.holiday;
+        const isCompanyEvent = !!d.companyEvent;
         const isToday = (d.dateStr === todayStr);
 
         let bg = "bg-white";
@@ -1424,7 +1590,10 @@ function doPost(e) {
           dot = "";
         } else if (isHoliday) {
           bg = "bg-rose-100/70";
-          dot = `<span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>`;
+          dot = `<span class="w-1.5 h-1.5 rounded-full bg-rose-600" title="國定假日: ${d.holiday.name}"></span>`;
+        } else if (isCompanyEvent) {
+          bg = "bg-purple-100/80";
+          dot = `<span class="w-1.5 h-1.5 rounded-full bg-purple-600" title="公司活動: ${d.companyEvent.name}"></span>`;
         } else if (isWeekend) {
           bg = "bg-slate-100/70";
         }
@@ -1462,18 +1631,20 @@ function doPost(e) {
 
             <!-- 右側時間軸甘特軌道 -->
             <div class="relative w-full h-10">
-              <!-- 底層背景網格 (週末灰底、國定假粉紅底、今天藍底直向高亮) -->
+              <!-- 底層背景網格 (週末灰底、國定假粉紅底、公司活動紫底、今天藍底直向高亮) -->
               <div class="grid w-full h-full" style="grid-template-columns: repeat(${allDays.length}, minmax(30px, 1fr));">
         `;
 
         allDays.forEach(d => {
           const isWeekend = (d.dayOfWeek === 0 || d.dayOfWeek === 6);
           const isHoliday = !!d.holiday;
+          const isCompanyEvent = !!d.companyEvent;
           const isToday = (d.dateStr === todayStr);
 
           let cellBg = "bg-white";
           if (isToday) cellBg = "bg-sky-100/90 border-x-2 border-sky-500/80 z-0";
           else if (isHoliday) cellBg = "bg-rose-50/60";
+          else if (isCompanyEvent) cellBg = "bg-purple-50/70 border-x border-purple-200/50";
           else if (isWeekend) cellBg = "bg-slate-100/50";
 
           rowsHtml += `<div class="border-r border-slate-200/80 h-full ${cellBg}"></div>`;
@@ -1551,7 +1722,7 @@ function doPost(e) {
 
       container.innerHTML = headerHtml + rowsHtml;
 
-      // 渲染底部國定假日說明提示列
+      // 渲染底部說明列：同時列出國定假日與公司重要活動
       const currentHolidays = allDays.filter(d => d.holiday).map(d => d.holiday);
       const uniqueHolidays = [];
       const map = new Map();
@@ -1562,16 +1733,41 @@ function doPost(e) {
         }
       });
 
+      const startRangeStr = allDays[0].dateStr;
+      const endRangeStr = allDays[allDays.length - 1].dateStr;
+      const currentCompanyEvents = getCompanyEventsInRange(startRangeStr, endRangeStr);
+
+      let footerItems = [];
       if (uniqueHolidays.length > 0) {
-        footer.innerHTML = uniqueHolidays.map(h => `
-          <div class="flex items-center space-x-1 text-slate-700">
-            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-            <span class="font-mono font-bold">${h.date.slice(5)}</span>
-            <span class="font-extrabold text-slate-800">${h.name}</span>
-          </div>
-        `).join('');
+        uniqueHolidays.forEach(h => {
+          footerItems.push(`
+            <div class="flex items-center space-x-1 text-slate-700">
+              <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+              <span class="font-mono font-bold">${h.date.slice(5)}</span>
+              <span class="font-extrabold text-slate-800">${h.name}</span>
+            </div>
+          `);
+        });
+      }
+
+      if (currentCompanyEvents.length > 0) {
+        currentCompanyEvents.forEach(e => {
+          const rangeText = (e.startDate === e.endDate) ? e.startDate.slice(5) : `${e.startDate.slice(5)} ~ ${e.endDate.slice(5)}`;
+          footerItems.push(`
+            <div class="flex items-center space-x-1.5 bg-purple-50 text-purple-900 border border-purple-200 px-2.5 py-0.5 rounded-md">
+              <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+              <span class="font-mono font-bold text-xs">${rangeText}</span>
+              <span class="font-black text-xs text-purple-950">${e.name}</span>
+              ${e.note ? `<span class="text-[10px] text-purple-600">(${e.note})</span>` : ''}
+            </div>
+          `);
+        });
+      }
+
+      if (footerItems.length > 0) {
+        footer.innerHTML = footerItems.join('<span class="text-slate-300">｜</span>');
       } else {
-        footer.innerHTML = `<span class="text-slate-400">當前呈現區間無國定假日</span>`;
+        footer.innerHTML = `<span class="text-slate-400">當前呈現區間無國定假日與公司活動</span>`;
       }
     }
 
@@ -2101,6 +2297,163 @@ function doPost(e) {
     }
 
     // Modal 2 & 3：成員管理功能
+
+    // ==========================================
+    // 公司重要活動管理邏輯 (Company Events Management)
+    // ==========================================
+    function openManageCompanyEventsModal() {
+      resetCompanyEventForm();
+      renderCompanyEventsList();
+      document.getElementById('companyEventsModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeManageCompanyEventsModal() {
+      document.getElementById('companyEventsModal').classList.add('hidden');
+    }
+
+    function renderCompanyEventsList() {
+      const container = document.getElementById('companyEventsListContainer');
+      const badge = document.getElementById('companyEventsCountBadge');
+      if (!container) return;
+
+      const events = (currentData.companyEvents || []).slice().sort((a, b) => a.startDate.localeCompare(b.startDate));
+      if (badge) badge.innerText = `共 ${events.length} 項活動`;
+
+      if (events.length === 0) {
+        container.innerHTML = `<div class="text-slate-400 text-center py-4">目前尚無自訂公司活動</div>`;
+        return;
+      }
+
+      container.innerHTML = events.map(e => {
+        const d1 = new Date(e.startDate);
+        const d2 = new Date(e.endDate);
+        const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+        const rangeText = (e.startDate === e.endDate) ? e.startDate : `${e.startDate} ~ ${e.endDate} (${diffDays}天)`;
+
+        return `
+          <div class="flex items-center justify-between p-2.5 bg-white border border-slate-200/80 rounded-lg hover:border-purple-300 transition-colors">
+            <div class="space-y-0.5 min-w-0 flex-1">
+              <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+                <span class="font-extrabold text-xs text-purple-950 truncate">${e.name}</span>
+                <span class="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200 font-mono">${rangeText}</span>
+              </div>
+              ${e.note ? `<div class="text-[11px] text-slate-500 pl-4 truncate">${e.note}</div>` : ''}
+            </div>
+            <div class="flex items-center space-x-1.5 shrink-0 ml-2">
+              <button onclick="editCompanyEvent('${e.id}')" title="編輯" class="p-1 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded">
+                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+              </button>
+              <button onclick="deleteCompanyEvent('${e.id}')" title="刪除" class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function resetCompanyEventForm() {
+      document.getElementById('formCompanyEventId').value = '';
+      document.getElementById('companyEventFormName').value = '';
+      document.getElementById('companyEventFormStartDate').value = '';
+      document.getElementById('companyEventFormEndDate').value = '';
+      document.getElementById('companyEventFormNote').value = '';
+
+      document.getElementById('companyEventFormHeading').innerHTML = `
+        <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-purple-600"></i>
+        新增公司活動
+      `;
+      document.getElementById('btnSubmitCompanyEventText').innerText = '儲存公司活動';
+      document.getElementById('btnCancelEditCompanyEvent').classList.add('hidden');
+      lucide.createIcons();
+    }
+
+    function onCompanyEventStartDateChange() {
+      const start = document.getElementById('companyEventFormStartDate').value;
+      const endEl = document.getElementById('companyEventFormEndDate');
+      if (start) {
+        endEl.min = start;
+        if (!endEl.value || endEl.value < start) {
+          endEl.value = start;
+        }
+      }
+    }
+
+    function editCompanyEvent(id) {
+      const e = (currentData.companyEvents || []).find(item => item.id === id);
+      if (!e) return;
+
+      document.getElementById('formCompanyEventId').value = e.id;
+      document.getElementById('companyEventFormName').value = e.name;
+      document.getElementById('companyEventFormStartDate').value = e.startDate;
+      document.getElementById('companyEventFormEndDate').value = e.endDate;
+      document.getElementById('companyEventFormEndDate').min = e.startDate;
+      document.getElementById('companyEventFormNote').value = e.note || '';
+
+      document.getElementById('companyEventFormHeading').innerHTML = `
+        <i data-lucide="edit-3" class="w-3.5 h-3.5 text-purple-600"></i>
+        編輯公司活動：${e.name}
+      `;
+      document.getElementById('btnSubmitCompanyEventText').innerText = '更新活動內容';
+      document.getElementById('btnCancelEditCompanyEvent').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    async function saveCompanyEvent(event) {
+      event.preventDefault();
+      const id = document.getElementById('formCompanyEventId').value;
+      const name = document.getElementById('companyEventFormName').value.trim();
+      const startDate = document.getElementById('companyEventFormStartDate').value;
+      const endDate = document.getElementById('companyEventFormEndDate').value;
+      const note = document.getElementById('companyEventFormNote').value.trim();
+
+      if (!name || !startDate || !endDate) {
+        alert("請完整填寫活動名稱、開始與結束日期！");
+        return;
+      }
+
+      if (endDate < startDate) {
+        alert("結束日期不能早於開始日期！");
+        return;
+      }
+
+      if (!currentData.companyEvents) currentData.companyEvents = [];
+
+      if (id) {
+        const idx = currentData.companyEvents.findIndex(item => item.id === id);
+        if (idx !== -1) {
+          currentData.companyEvents[idx] = { ...currentData.companyEvents[idx], name, startDate, endDate, note };
+        }
+      } else {
+        const newId = "ce-" + Date.now();
+        currentData.companyEvents.push({ id: newId, name, startDate, endDate, note });
+      }
+
+      saveData();
+      refreshAll();
+      renderCompanyEventsList();
+      resetCompanyEventForm();
+      await pushDataToCloudSilently();
+    }
+
+    async function deleteCompanyEvent(id) {
+      const e = (currentData.companyEvents || []).find(item => item.id === id);
+      const name = e ? e.name : '此活動';
+      if (!confirm(`確定要刪除「${name}」公司活動嗎？刪除後甘特圖將不再以此高亮。`)) {
+        return;
+      }
+
+      currentData.companyEvents = (currentData.companyEvents || []).filter(item => item.id !== id);
+      saveData();
+      refreshAll();
+      renderCompanyEventsList();
+      resetCompanyEventForm();
+      await pushDataToCloudSilently();
+    }
+
     function openManageMembersModal() {
 
       populateBatchDeptOptions();
