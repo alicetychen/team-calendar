@@ -282,7 +282,7 @@
               <i data-lucide="users-round" class="w-4 h-4 text-amber-600"></i>
               人力重疊
             </h3>
-            <p class="text-[11px] text-slate-400 font-medium">同部門兩人以上同時不在的工作日</p>
+            <p class="text-[11px] text-slate-400 font-medium">同部門兩人以上同時「請假」的工作日（居家/出差不列入）</p>
           </div>
           <div class="flex flex-wrap items-center gap-1.5 no-print">
             <select id="overlapDeptSelect" onchange="onOverlapDeptSelectChange(this.value)" class="bg-white border border-slate-200 text-slate-600 text-[11px] rounded px-2 py-1 focus:ring-1 focus:ring-amber-400 font-bold max-w-[145px] truncate">
@@ -1717,7 +1717,7 @@ function doPost(e) {
         const daysMap = {};
 
         currentData.events.forEach(ev => {
-          if (ev.type === 'event') return; // 跳過團隊活動
+          if (ev.type !== 'leave') return; // 僅統計「請假」重疊（居家、出差、活動仍屬在職，不列入）
 
           let cur = new Date(ev.startDate);
           const end = new Date(ev.endDate);
