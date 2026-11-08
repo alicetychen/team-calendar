@@ -52,6 +52,17 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background: #64748b;
     }
+    :root {
+      --name-col-w: 138px;
+    }
+    @media (min-width: 640px) {
+      :root {
+        --name-col-w: 152px;
+      }
+    }
+    .touch-scroll {
+      -webkit-overflow-scrolling: touch;
+    }
     @media print {
       .no-print { display: none !important; }
       body { background: white !important; }
@@ -61,40 +72,40 @@
 <body class="min-h-screen flex flex-col pb-12">
 
   <!-- 頂部頁頭 (與圖片模板完美對齊的大標題與圖例列) -->
-  <header class="bg-white border-b border-slate-200 pt-6 pb-4 px-4 sm:px-6 lg:px-8 shadow-xs">
-    <div class="max-w-[1560px] mx-auto space-y-4">
+  <header class="bg-white border-b border-slate-200 pt-4 sm:pt-6 pb-3 sm:pb-4 px-3 sm:px-6 lg:px-8 shadow-xs">
+    <div class="max-w-[1560px] mx-auto space-y-3 sm:space-y-4">
       
       <!-- 主標題與右側區間標籤列 -->
-      <div class="flex flex-wrap items-end justify-between gap-4">
+      <div class="flex flex-wrap items-center justify-between gap-2.5 sm:gap-4">
         <div>
-          <div class="flex items-center space-x-3">
-            <h1 class="text-3xl font-black text-slate-900 tracking-tight">DC 團隊行事曆</h1>
+          <div class="flex items-center space-x-2 sm:space-x-3">
+            <h1 class="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">DC 團隊行事曆</h1>
           </div>
         </div>
 
-        <!-- 右側季度與日期標籤 ＋ 控制選單 -->
-        <div class="flex items-center space-x-3 no-print">
+        <!-- 右側季度與日期標籤 ＋ 控制選單 (手機與平板自動自適應排列) -->
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2.5 no-print">
           <!-- 雲端同步 status 按鈕 -->
-          <button onclick="openCloudSyncModal()" id="cloudStatusBtn" class="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-lg border border-amber-300 transition-all">
-            <i data-lucide="cloud" id="cloudStatusIcon" class="w-3.5 h-3.5 text-amber-600"></i>
-            <span id="cloudStatusText">☁️ 全團隊自動同步</span>
+          <button onclick="openCloudSyncModal()" id="cloudStatusBtn" class="flex items-center space-x-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] sm:text-xs font-bold rounded-lg border border-amber-300 transition-all">
+            <i data-lucide="cloud" id="cloudStatusIcon" class="w-3.5 h-3.5 text-amber-600 shrink-0"></i>
+            <span id="cloudStatusText" class="truncate max-w-[110px] sm:max-w-none">☁️ 全團隊自動同步</span>
           </button>
 
           <!-- 成員管理按鈕 -->
-          <button onclick="openManageMembersModal()" id="btnManageMembers" class="flex items-center justify-center px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition-colors">
+          <button onclick="openManageMembersModal()" id="btnManageMembers" class="flex items-center justify-center px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] sm:text-xs font-bold rounded-lg border border-slate-200 transition-colors whitespace-nowrap">
             <span>調整組織成員</span>
           </button>
 
           <!-- 公司活動管理按鈕 -->
-          <button onclick="openManageCompanyEventsModal()" id="btnManageCompanyEvents" class="flex items-center space-x-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold rounded-lg border border-purple-200 transition-colors">
-            <i data-lucide="building" class="w-3.5 h-3.5 text-purple-600"></i>
+          <button onclick="openManageCompanyEventsModal()" id="btnManageCompanyEvents" class="flex items-center space-x-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-[11px] sm:text-xs font-bold rounded-lg border border-purple-200 transition-colors whitespace-nowrap">
+            <i data-lucide="building" class="w-3.5 h-3.5 text-purple-600 shrink-0"></i>
             <span>調整公司活動</span>
           </button>
 
           <!-- 季度與日期區間顯示框 -->
-          <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1 text-right">
-            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider" id="seasonLabel">2026 秋季</div>
-            <div class="text-xs font-extrabold text-slate-800 font-mono" id="periodRangeLabel">9/01 - 10/31</div>
+          <div class="bg-slate-50 border border-slate-200 rounded-lg px-2 sm:px-3 py-1 text-right shrink-0">
+            <div class="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider" id="seasonLabel">2026 秋季</div>
+            <div class="text-[11px] sm:text-xs font-extrabold text-slate-800 font-mono" id="periodRangeLabel">9/01 - 10/31</div>
           </div>
         </div>
       </div>
@@ -103,72 +114,76 @@
       <div class="h-px bg-slate-200 w-full"></div>
 
       <!-- 圖例 (Legend Row) 與月份/人員快速控制列 -->
-      <div class="flex flex-wrap items-center justify-between gap-4 text-xs font-medium text-slate-600">
-        <!-- 圖例群 -->
-        <div class="flex flex-wrap items-center gap-4">
-          <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-3 bg-sky-100 border border-sky-400 rounded-xs"></span>
+      <div class="flex flex-wrap items-center justify-between gap-2.5 sm:gap-4 text-xs font-medium text-slate-600">
+        <!-- 圖例群 (自適應各尺寸螢幕) -->
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3.5 text-[11px] sm:text-xs">
+          <div class="flex items-center space-x-1">
+            <span class="w-3.5 h-2.5 sm:w-4 sm:h-3 bg-sky-100 border border-sky-400 rounded-xs"></span>
             <span class="font-bold text-slate-700">請假</span>
           </div>
-          <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-3 bg-emerald-100 border border-emerald-400 rounded-xs"></span>
+          <div class="flex items-center space-x-1">
+            <span class="w-3.5 h-2.5 sm:w-4 sm:h-3 bg-emerald-100 border border-emerald-400 rounded-xs"></span>
             <span class="font-bold text-slate-700">居家</span>
           </div>
-          <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-3 bg-amber-100 border border-amber-400 rounded-xs"></span>
+          <div class="flex items-center space-x-1">
+            <span class="w-3.5 h-2.5 sm:w-4 sm:h-3 bg-amber-100 border border-amber-400 rounded-xs"></span>
             <span class="font-bold text-slate-700">出差</span>
           </div>
-          <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-3 bg-rose-100 border border-rose-300 rounded-xs"></span>
+          <div class="flex items-center space-x-1">
+            <span class="w-3.5 h-2.5 sm:w-4 sm:h-3 bg-rose-100 border border-rose-300 rounded-xs"></span>
             <span class="font-bold text-slate-700">國定假日</span>
           </div>
-          <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-3 bg-slate-200 rounded-xs"></span>
+          <div class="flex items-center space-x-1">
+            <span class="w-3.5 h-2.5 sm:w-4 sm:h-3 bg-purple-100 border border-purple-400 rounded-xs"></span>
+            <span class="font-bold text-slate-700">公司活動</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <span class="w-3.5 h-2.5 sm:w-4 sm:h-3 bg-slate-200 rounded-xs"></span>
             <span class="font-bold text-slate-700">週末</span>
           </div>
-          <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-3 bg-sky-600 rounded-xs"></span>
+          <div class="flex items-center space-x-1">
+            <span class="w-3.5 h-2.5 sm:w-4 sm:h-3 bg-sky-600 rounded-xs"></span>
             <span class="font-bold text-sky-700">今天 (Today)</span>
           </div>
-          <span class="text-slate-400">｜</span>
-          <span class="text-slate-500 font-mono text-[11px]">工作日 = 扣除週末與國定假日</span>
+          <span class="text-slate-300 hidden md:inline">｜</span>
+          <span class="text-slate-400 font-mono text-[10px] hidden lg:inline">工作日 = 扣除週末與國定假日</span>
         </div>
 
-        <!-- 年月導航與快捷跳轉按鈕 -->
-        <div class="flex items-center space-x-2 no-print">
+        <!-- 年月導航與快捷跳轉按鈕 (手機上單行排開) -->
+        <div class="flex items-center space-x-1 sm:space-x-1.5 no-print shrink-0">
           <button onclick="changeMonth(-1)" class="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded border border-slate-200">
-            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            <i data-lucide="chevron-left" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
           </button>
           
-          <select id="yearSelect" onchange="onDateSelectorChange()" class="text-xs font-extrabold bg-white text-slate-800 border border-slate-200 rounded px-2 py-1 focus:ring-2 focus:ring-sky-500">
+          <select id="yearSelect" onchange="onDateSelectorChange()" class="text-[11px] sm:text-xs font-extrabold bg-white text-slate-800 border border-slate-200 rounded px-1.5 sm:px-2 py-1 focus:ring-2 focus:ring-sky-500">
             <option value="2026">2026 年</option>
             <option value="2027">2027 年</option>
           </select>
 
-          <select id="monthSelect" onchange="onDateSelectorChange()" class="text-xs font-extrabold bg-white text-slate-800 border border-slate-200 rounded px-2 py-1 focus:ring-2 focus:ring-sky-500">
+          <select id="monthSelect" onchange="onDateSelectorChange()" class="text-[11px] sm:text-xs font-extrabold bg-white text-slate-800 border border-slate-200 rounded px-1.5 sm:px-2 py-1 focus:ring-2 focus:ring-sky-500">
             <option value="0">1 月</option>
             <option value="1">2 月</option>
             <option value="2">3 月</option>
             <option value="3">4 月</option>
             <option value="4">5 月</option>
             <option value="5">6 月</option>
-            <option value="6">7 月</option>
-            <option value="7">8 月</option>
-            <option value="8">9 月</option>
-            <option value="9">10 月</option>
-            <option value="10">11 月</option>
-            <option value="11">12 月</option>
+            <option value="7">7 月</option>
+            <option value="8">8 月</option>
+            <option value="9">9 月</option>
+            <option value="10">10 月</option>
+            <option value="11">11 月</option>
+            <option value="12">12 月</option>
           </select>
 
           <button onclick="changeMonth(1)" class="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded border border-slate-200">
-            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
           </button>
 
-          <button onclick="jumpToToday()" class="text-xs px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold rounded border border-sky-200">
+          <button onclick="jumpToToday()" class="text-[11px] sm:text-xs px-2 sm:px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold rounded border border-sky-200">
             今天
           </button>
 
-          <button onclick="exportData()" title="匯出 JSON 備份" class="p-1 text-slate-500 hover:text-slate-800 border border-slate-200 rounded ml-1">
+          <button onclick="exportData()" title="匯出 JSON 備份" class="p-1 text-slate-500 hover:text-slate-800 border border-slate-200 rounded ml-0.5">
             <i data-lucide="download" class="w-3.5 h-3.5"></i>
           </button>
           <label title="匯入 JSON" class="p-1 text-slate-500 hover:text-slate-800 border border-slate-200 rounded cursor-pointer mb-0">
@@ -178,19 +193,35 @@
         </div>
       </div>
 
-      <!-- 部門與人員快速篩選區 (支援多部門切換與過濾) -->
-      <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100 no-print">
+      <!-- 部門與團隊成員下拉篩選區 (需求3：所屬部門旁人員設定成下拉選單) -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3.5 pt-2.5 border-t border-slate-100 no-print">
+        <!-- 所屬部門下拉 -->
         <div class="flex items-center space-x-1.5 shrink-0">
-          <span class="font-extrabold text-xs text-slate-700 flex items-center gap-1">
+          <span class="font-extrabold text-[11px] sm:text-xs text-slate-700 flex items-center gap-1">
             <i data-lucide="building-2" class="w-3.5 h-3.5 text-sky-600"></i> 所屬部門：
           </span>
-          <select id="departmentFilterSelect" onchange="setDepartmentFilter(this.value)" class="bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-lg px-2.5 py-1 focus:ring-2 focus:ring-sky-500 focus:outline-none shadow-2xs">
+          <select id="departmentFilterSelect" onchange="setDepartmentFilter(this.value)" class="bg-white border border-slate-200 text-slate-800 text-[11px] sm:text-xs font-bold rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-sky-500 focus:outline-none shadow-2xs max-w-[170px] sm:max-w-[210px] truncate">
             <!-- 動態產生部門選項 -->
           </select>
         </div>
-        <div class="h-4 w-px bg-slate-200 shrink-0"></div>
-        <div id="memberFilterBadges" class="flex flex-wrap items-center gap-1.5 flex-1">
-          <!-- 動態載入成員篩選按鈕 -->
+
+        <div class="h-4 w-px bg-slate-200 shrink-0 hidden sm:block"></div>
+
+        <!-- 團隊成員下拉選單 (取代原本整排按鈕徽章) -->
+        <div class="flex items-center space-x-1.5 shrink-0">
+          <span class="font-extrabold text-[11px] sm:text-xs text-slate-700 flex items-center gap-1">
+            <i data-lucide="users" class="w-3.5 h-3.5 text-sky-600"></i> 團隊成員：
+          </span>
+          <select id="memberFilterSelect" onchange="setMemberFilter(this.value)" class="bg-white border border-slate-200 text-slate-800 text-[11px] sm:text-xs font-bold rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-sky-500 focus:outline-none shadow-2xs max-w-[180px] sm:max-w-[230px] truncate">
+            <!-- 動態載入成員選項 -->
+          </select>
+        </div>
+
+        <!-- 快速重設回全體成員按鈕 (選定特定單一成員時呈現) -->
+        <div id="memberFilterResetWrap" class="shrink-0 hidden">
+          <button onclick="setMemberFilter('all')" class="text-[10px] sm:text-[11px] text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded font-bold border border-sky-200 flex items-center gap-1">
+            <i data-lucide="rotate-ccw" class="w-3 h-3"></i> 顯示全部成員
+          </button>
         </div>
       </div>
     </div>
@@ -222,7 +253,7 @@
       </div>
 
       <!-- 可橫向捲動的甘特圖容器 -->
-      <div class="overflow-x-auto custom-scrollbar p-4">
+      <div class="overflow-x-auto touch-scroll custom-scrollbar p-2.5 sm:p-4">
         <div id="ganttTimelineContainer" class="min-w-[1200px]">
           <!-- 甘特圖動態生成 (完美還原範本模板風格) -->
         </div>
@@ -266,7 +297,7 @@
           </div>
         </div>
 
-        <div class="overflow-x-auto overflow-y-auto max-h-[380px] custom-scrollbar flex-1">
+        <div class="overflow-x-auto overflow-y-auto touch-scroll max-h-[380px] custom-scrollbar flex-1">
           <table class="w-full text-left text-xs">
             <thead class="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold z-10 h-9">
               <tr>
@@ -312,7 +343,7 @@
           </div>
         </div>
 
-        <div class="overflow-x-auto overflow-y-auto max-h-[380px] custom-scrollbar flex-1">
+        <div class="overflow-x-auto overflow-y-auto touch-scroll max-h-[380px] custom-scrollbar flex-1">
           <table class="w-full text-left text-xs">
             <thead class="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-bold z-10 h-9">
               <tr>
@@ -1258,7 +1289,7 @@ function doPost(e) {
       updateAdminLockUI();
       renderHeaderInfo();
       populateDepartmentSelectOptions();
-      renderMemberBadges();
+      renderMemberSelectOptions();
       populateMemberSelectOptions();
       renderGanttTimeline();
       renderLeaveDetailTable();
@@ -1415,34 +1446,36 @@ function doPost(e) {
     }
 
     // 成員篩選徽章 (自動依據所選部門過濾成員)
-    function renderMemberBadges() {
-      const container = document.getElementById('memberFilterBadges');
-      let html = `
-        <button onclick="setMemberFilter('all')" class="px-2.5 py-0.5 rounded-full text-xs font-bold transition-all ${activeMemberFilter === 'all' ? 'bg-slate-800 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
-          全部人員
-        </button>
-      `;
+    // 團隊成員下拉選單動態生成 (取代原先整排徽章，避免人多時折行爆版)
+    function renderMemberSelectOptions() {
+      const select = document.getElementById('memberFilterSelect');
+      const resetWrap = document.getElementById('memberFilterResetWrap');
+      if (!select) return;
 
       const visibleMembers = activeDepartmentFilter === 'all'
         ? currentData.members
         : currentData.members.filter(m => (m.org || m.dept || '').includes(activeDepartmentFilter));
 
+      let html = `<option value="all">👥 全部人員 (${visibleMembers.length} 位)</option>`;
       visibleMembers.forEach(m => {
-        const isSelected = activeMemberFilter === m.id;
-        html += `
-          <button onclick="setMemberFilter('${m.id}')" class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold transition-all ${isSelected ? 'ring-2 ring-offset-1 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}" style="${isSelected ? `background-color: ${m.color}; ring-color: ${m.color};` : ''}">
-            <span>${m.name}</span>
-            <span class="text-[10px] opacity-80">(${m.chineseName})</span>
-          </button>
-        `;
+        const isSelected = activeMemberFilter === m.id ? 'selected' : '';
+        const chinesePart = m.chineseName ? ` (${m.chineseName})` : '';
+        html += `<option value="${m.id}" ${isSelected}>👤 ${m.name}${chinesePart}</option>`;
       });
+      select.innerHTML = html;
 
-      container.innerHTML = html;
+      if (resetWrap) {
+        if (activeMemberFilter !== 'all') {
+          resetWrap.classList.remove('hidden');
+        } else {
+          resetWrap.classList.add('hidden');
+        }
+      }
     }
 
     function setMemberFilter(memberId) {
       activeMemberFilter = memberId;
-      renderMemberBadges();
+      renderMemberSelectOptions();
       refreshAll();
     }
 
@@ -1502,24 +1535,24 @@ function doPost(e) {
         });
       }
 
-      // 1. 雙層頂部表頭 Header (Month row & Day row)
+      // 1. 雙層頂部表頭 Header (Month row & Day row) - 響應式名稱欄寬度
       let headerHtml = `
-        <div class="grid border-b border-slate-200" style="grid-template-columns: 160px repeat(${allDays.length}, minmax(30px, 1fr));">
+        <div class="grid border-b border-slate-200" style="grid-template-columns: var(--name-col-w, 138px) repeat(${allDays.length}, minmax(28px, 1fr));">
           <!-- 左上角空白欄 -->
-          <div class="bg-slate-50 border-r border-slate-200 sticky left-0 z-30 shadow-2xs" style="height:26px;"></div>
+          <div class="bg-slate-50 border-r border-slate-200 sticky left-0 z-30 shadow-2xs" style="height:24px;"></div>
           
           <!-- 第一層：年月分區 -->
-          <div style="grid-column: span ${daysInM1} / span ${daysInM1}; height:26px;" class="bg-slate-50 font-extrabold text-sm text-slate-700 px-2 border-r border-b border-slate-200 flex items-center justify-center">
+          <div style="grid-column: span ${daysInM1} / span ${daysInM1}; height:24px;" class="bg-slate-50 font-extrabold text-xs sm:text-sm text-slate-700 px-2 border-r border-b border-slate-200 flex items-center justify-center">
             ${y1} 年 ${m1 + 1} 月
           </div>
-          <div style="grid-column: span ${daysInM2} / span ${daysInM2}; height:26px;" class="bg-slate-50 font-extrabold text-sm text-slate-700 px-2 border-r border-b border-slate-200 flex items-center justify-center">
+          <div style="grid-column: span ${daysInM2} / span ${daysInM2}; height:24px;" class="bg-slate-50 font-extrabold text-xs sm:text-sm text-slate-700 px-2 border-r border-b border-slate-200 flex items-center justify-center">
             ${y2} 年 ${m2 + 1} 月
           </div>
         </div>
 
         <!-- 第二層：日期與星期 (標註國定假日與公司活動) -->
-        <div class="grid border-b border-slate-200" style="grid-template-columns: 160px repeat(${allDays.length}, minmax(30px, 1fr));">
-          <div class="bg-slate-50 border-r border-slate-200 sticky left-0 z-30" style="height:38px;"></div>
+        <div class="grid border-b border-slate-200" style="grid-template-columns: var(--name-col-w, 138px) repeat(${allDays.length}, minmax(28px, 1fr));">
+          <div class="bg-slate-50 border-r border-slate-200 sticky left-0 z-30" style="height:34px;"></div>
       `;
 
       allDays.forEach(d => {
@@ -1548,18 +1581,18 @@ function doPost(e) {
         }
 
         headerHtml += `
-          <div title="${tooltipText}" style="height:38px;" class="px-0 text-center border-r border-slate-200 select-none ${colBg} flex flex-col items-center justify-center">
-            <div class="font-extrabold text-[14px] leading-none flex items-center justify-center space-x-0.5">
+          <div title="${tooltipText}" style="height:34px;" class="px-0 text-center border-r border-slate-200 select-none ${colBg} flex flex-col items-center justify-center">
+            <div class="font-extrabold text-[13px] leading-none flex items-center justify-center space-x-0.5">
               <span>${d.day}</span>
               ${dotHtml}
             </div>
-            <div class="text-[10px] ${isToday ? 'opacity-100 font-extrabold text-white' : 'opacity-70'} leading-none mt-0.5">${['日','一','二','三','四','五','六'][d.dayOfWeek]}</div>
+            <div class="text-[9px] ${isToday ? 'opacity-100 font-extrabold text-white' : 'opacity-70'} leading-none mt-0.5">${['日','一','二','三','四','五','六'][d.dayOfWeek]}</div>
           </div>
         `;
       });
       headerHtml += `</div>`;
 
-      // 2. 成員排程網格與長 Bar 軌道 (Gantt Rows)
+      // 2. 成員排程網格與長 Bar 軌道 (Gantt Rows) - 緊湊高度調整
       let displayMembers = currentData.members;
       if (activeDepartmentFilter !== 'all') {
         displayMembers = displayMembers.filter(m => (m.org || m.dept || '').includes(activeDepartmentFilter));
@@ -1572,8 +1605,8 @@ function doPost(e) {
 
       // 專用「假日 / 公司活動」提示列 (置頂於第一個成員前)
       rowsHtml += `
-        <div class="grid border-b border-slate-200 h-5" style="grid-template-columns: 160px repeat(${allDays.length}, minmax(30px, 1fr));">
-          <div class="px-2.5 bg-slate-50 font-bold text-[10px] text-slate-500 border-r border-slate-200 sticky left-0 z-20 shadow-xs flex items-center">
+        <div class="grid border-b border-slate-200 h-5" style="grid-template-columns: var(--name-col-w, 138px) repeat(${allDays.length}, minmax(28px, 1fr));">
+          <div class="px-2 bg-slate-50 font-bold text-[10px] text-slate-500 border-r border-slate-200 sticky left-0 z-20 shadow-xs flex items-center truncate">
             假日 / 活動
           </div>
       `;
@@ -1607,7 +1640,7 @@ function doPost(e) {
       });
       rowsHtml += `</div>`;
 
-      // 逐成員渲染列
+      // 逐成員渲染列 (高度由 h-10 縮小至 h-[34px]，讓成員清單間距更緊湊)
       displayMembers.forEach(m => {
         const startRangeStr = allDays[0].dateStr;
         const endRangeStr = allDays[allDays.length - 1].dateStr;
@@ -1619,21 +1652,21 @@ function doPost(e) {
         });
 
         rowsHtml += `
-          <div class="grid relative border-b border-slate-200 h-10" style="grid-template-columns: 160px 1fr;">
-            <!-- 固定成員姓名欄 -->
-            <div class="px-2.5 bg-white border-r border-slate-200 flex items-center justify-between sticky left-0 z-20 shadow-xs h-10">
-              <div class="min-w-0 flex-1">
-                <div class="font-bold text-xs text-slate-800 truncate leading-tight">${m.name}</div>
+          <div class="grid relative border-b border-slate-200 h-[34px]" style="grid-template-columns: var(--name-col-w, 138px) 1fr;">
+            <!-- 固定成員姓名欄 (縮小間距，自適應字體) -->
+            <div class="px-2 bg-white border-r border-slate-200 flex items-center justify-between sticky left-0 z-20 shadow-xs h-[34px]">
+              <div class="min-w-0 flex-1 pr-1">
+                <div class="font-bold text-[11px] sm:text-xs text-slate-800 truncate leading-tight" title="${m.name}${m.chineseName ? ' (' + m.chineseName + ')' : ''}">${m.name}</div>
               </div>
-              <button onclick="openEditMemberModal('${m.id}')" title="編輯成員" class="text-slate-300 hover:text-sky-600 p-0.5 no-print shrink-0 ml-1">
+              <button onclick="openEditMemberModal('${m.id}')" title="編輯成員" class="text-slate-300 hover:text-sky-600 p-0.5 no-print shrink-0">
                 <i data-lucide="edit-2" class="w-3 h-3"></i>
               </button>
             </div>
 
             <!-- 右側時間軸甘特軌道 -->
-            <div class="relative w-full h-10">
+            <div class="relative w-full h-[34px]">
               <!-- 底層背景網格 (週末灰底、國定假粉紅底、公司活動紫底、今天藍底直向高亮) -->
-              <div class="grid w-full h-full" style="grid-template-columns: repeat(${allDays.length}, minmax(30px, 1fr));">
+              <div class="grid w-full h-full" style="grid-template-columns: repeat(${allDays.length}, minmax(28px, 1fr));">
         `;
 
         allDays.forEach(d => {
@@ -1654,7 +1687,7 @@ function doPost(e) {
         rowsHtml += `
               </div>
 
-              <!-- 上層甘特長 Bar 事件軌道 -->
+              <!-- 上層甘特長 Bar 事件軌道 (h-[22px] 緊湊精緻) -->
               <div class="absolute inset-0 pointer-events-none">
         `;
 
@@ -1688,7 +1721,7 @@ function doPost(e) {
               typeTitle = "出差";
             } else if (ev.type === 'event') {
               barClass = "bg-indigo-100/90 border border-indigo-400 text-indigo-950 shadow-2xs hover:bg-indigo-200/90";
-              typeTitle = "團隊活動";
+              typeTitle = "活動";
             }
 
             const rangeText = (ev.startDate === ev.endDate) 
@@ -1698,15 +1731,15 @@ function doPost(e) {
             rowsHtml += `
               <div onclick="editEvent('${ev.id}')"
                    title="${m.name} ｜ ${typeTitle} ${rangeText} ｜ ${calDays} 天 · ${workDays} 工作日 ｜ 點擊編輯"
-                   style="left: ${leftPercent}%; width: calc(${widthPercent}% - 3px); margin-left: 1.5px; top: 50%; transform: translateY(-50%);"
-                   class="group absolute h-6 ${barClass} rounded px-1.5 text-[11px] font-bold flex items-center justify-between pointer-events-auto cursor-pointer transition-all hover:scale-[1.005]">
+                   style="left: ${leftPercent}%; width: calc(${widthPercent}% - 2px); margin-left: 1px; top: 50%; transform: translateY(-50%);"
+                   class="group absolute h-[22px] ${barClass} rounded px-1 text-[10px] sm:text-[11px] font-bold flex items-center justify-between pointer-events-auto cursor-pointer transition-all hover:scale-[1.005]">
                 
                 <div class="flex items-center space-x-1 truncate">
-                  <span class="font-black">${typeTitle}</span>
-                  <span class="font-mono text-[9px] opacity-90">${rangeText}</span>
+                  <span class="font-black shrink-0">${typeTitle}</span>
+                  <span class="font-mono text-[9px] opacity-90 truncate">${rangeText}</span>
                 </div>
 
-                <div class="text-[9px] font-mono opacity-70 shrink-0 ml-1">
+                <div class="text-[9px] font-mono opacity-70 shrink-0 ml-0.5">
                   <span>${calDays}天·${workDays}工</span>
                 </div>
               </div>
@@ -1755,11 +1788,11 @@ function doPost(e) {
         currentCompanyEvents.forEach(e => {
           const rangeText = (e.startDate === e.endDate) ? e.startDate.slice(5) : `${e.startDate.slice(5)} ~ ${e.endDate.slice(5)}`;
           footerItems.push(`
-            <div class="flex items-center space-x-1.5 bg-purple-50 text-purple-900 border border-purple-200 px-2.5 py-0.5 rounded-md">
+            <div class="flex items-center space-x-1.5 bg-purple-50 text-purple-900 border border-purple-200 px-2 py-0.5 rounded-md">
               <span class="w-2 h-2 rounded-full bg-purple-600"></span>
               <span class="font-mono font-bold text-xs">${rangeText}</span>
               <span class="font-black text-xs text-purple-950">${e.name}</span>
-              ${e.note ? `<span class="text-[10px] text-purple-600">(${e.note})</span>` : ''}
+              ${e.note ? `<span class="text-[10px] text-purple-600 hidden sm:inline">(${e.note})</span>` : ''}
             </div>
           `);
         });
