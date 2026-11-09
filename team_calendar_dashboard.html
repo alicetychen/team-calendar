@@ -72,7 +72,7 @@
 <body class="min-h-screen flex flex-col pb-12">
 
   <!-- 頂部頁頭 (與圖片模板完美對齊的大標題與圖例列) -->
-  <header class="bg-white border-b border-slate-200 pt-4 sm:pt-6 pb-3 sm:pb-4 px-3 sm:px-6 lg:px-8 shadow-xs">
+  <header class="bg-white border-b border-slate-200 pt-3.5 sm:pt-5 pb-2.5 sm:pb-3 px-3 sm:px-6 lg:px-8 shadow-xs">
     <div class="max-w-[1560px] mx-auto space-y-3 sm:space-y-4">
       
       <!-- 主標題與右側區間標籤列 -->
@@ -167,12 +167,12 @@
             <option value="3">4 月</option>
             <option value="4">5 月</option>
             <option value="5">6 月</option>
-            <option value="7">7 月</option>
-            <option value="8">8 月</option>
-            <option value="9">9 月</option>
-            <option value="10">10 月</option>
-            <option value="11">11 月</option>
-            <option value="12">12 月</option>
+            <option value="6">7 月</option>
+            <option value="7">8 月</option>
+            <option value="8">9 月</option>
+            <option value="9">10 月</option>
+            <option value="10">11 月</option>
+            <option value="11">12 月</option>
           </select>
 
           <button onclick="changeMonth(1)" class="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded border border-slate-200">
@@ -228,7 +228,7 @@
   </header>
 
   <!-- 主內容容器 -->
-  <main class="max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-1 w-full">
+  <main class="max-w-[1560px] mx-auto px-3 sm:px-6 lg:px-8 pt-2.5 sm:pt-3.5 pb-6 space-y-4 sm:space-y-5 flex-1 w-full">
 
     <!-- 區塊一：【時程總覽】卡片 (甘特圖 Gantt Timeline 視圖) -->
     <section class="bg-white rounded-xl border border-slate-200/90 shadow-xs overflow-hidden">
@@ -253,7 +253,7 @@
       </div>
 
       <!-- 可橫向捲動的甘特圖容器 -->
-      <div class="overflow-x-auto touch-scroll custom-scrollbar p-2.5 sm:p-4">
+      <div class="overflow-x-auto touch-scroll custom-scrollbar px-2.5 pt-2 pb-3 sm:px-4 sm:pt-2.5 sm:pb-3.5">
         <div id="ganttTimelineContainer" class="min-w-[1200px]">
           <!-- 甘特圖動態生成 (完美還原範本模板風格) -->
         </div>
@@ -1399,6 +1399,12 @@ function doPost(e) {
       const lastDayStr = String(lastDayOfNextM).padStart(2, '0');
 
       document.getElementById('periodRangeLabel').innerText = `${m1Str}/01 - ${m2Str}/${lastDayStr}`;
+
+      // 同步年月下拉選單選取值
+      const yearEl = document.getElementById('yearSelect');
+      const monthEl = document.getElementById('monthSelect');
+      if (yearEl) yearEl.value = currentYear;
+      if (monthEl) monthEl.value = currentMonth;
     }
 
     // 部門選單與 datalist 動態生成
