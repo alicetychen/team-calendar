@@ -304,7 +304,7 @@
                 <th class="py-2.5 px-4">姓名</th>
                 <th class="py-2.5 px-3">類別</th>
                 <th class="py-2.5 px-3">期間</th>
-                <th class="py-2.5 px-3 text-center">工作日</th>
+                <th class="py-2.5 px-3 text-center">天數 (日曆天)</th>
                 <th class="py-2.5 px-3 text-right no-print">操作</th>
               </tr>
             </thead>
@@ -1734,20 +1734,44 @@ function doPost(e) {
               ? `${ev.startDate.slice(5)}` 
               : `${ev.startDate.slice(5)}-${ev.endDate.slice(5)}`;
 
+            // 顯示天數 (只要顯示請幾天就好 - 日曆天)
+            const daysText = `${calDays}天`;
+            let barInnerHtml = '';
+            
+            if (spanCount === 1) {
+              // 1 天：寬度僅 1 格，精巧呈現天數，避免字體溢出或重疊
+              barInnerHtml = `
+                <div class="w-full text-center truncate font-mono text-[10px]">
+                  <span>${daysText}</span>
+                </div>
+              `;
+            } else if (spanCount === 2) {
+              // 2 天：呈現 假別 + 2天
+              barInnerHtml = `
+                <div class="flex items-center justify-between w-full truncate">
+                  <span class="font-black shrink-0">${typeTitle}</span>
+                  <span class="font-mono text-[9px] opacity-85 shrink-0 ml-0.5">${daysText}</span>
+                </div>
+              `;
+            } else {
+              // 3 天以上：左邊顯示 假別 + 期間，右邊顯示 日曆天數
+              barInnerHtml = `
+                <div class="flex items-center space-x-1 truncate min-w-0">
+                  <span class="font-black shrink-0">${typeTitle}</span>
+                  <span class="font-mono text-[9px] opacity-85 truncate">${rangeText}</span>
+                </div>
+                <div class="text-[9px] font-mono opacity-85 shrink-0 ml-1">
+                  <span>${daysText}</span>
+                </div>
+              `;
+            }
+
             rowsHtml += `
               <div onclick="editEvent('${ev.id}')"
-                   title="${m.name} ｜ ${typeTitle} ${rangeText} ｜ ${calDays} 天 · ${workDays} 工作日 ｜ 點擊編輯"
+                   title="${m.name} ｜ ${typeTitle} ${rangeText} ｜ 請假 ${calDays} 天 (日曆天) ｜ 點擊編輯"
                    style="left: ${leftPercent}%; width: calc(${widthPercent}% - 2px); margin-left: 1px; top: 50%; transform: translateY(-50%);"
                    class="group absolute h-[22px] ${barClass} rounded px-1 text-[10px] sm:text-[11px] font-bold flex items-center justify-between pointer-events-auto cursor-pointer transition-all hover:scale-[1.005]">
-                
-                <div class="flex items-center space-x-1 truncate">
-                  <span class="font-black shrink-0">${typeTitle}</span>
-                  <span class="font-mono text-[9px] opacity-90 truncate">${rangeText}</span>
-                </div>
-
-                <div class="text-[9px] font-mono opacity-70 shrink-0 ml-0.5">
-                  <span>${calDays}天·${workDays}工</span>
-                </div>
+                ${barInnerHtml}
               </div>
             `;
           }
@@ -1872,7 +1896,7 @@ function doPost(e) {
       tbody.innerHTML = filtered.map(ev => {
         const m = currentData.members.find(x => x.id === ev.memberId);
         const memberName = ev.memberId === 'all' ? '全員' : (m ? m.name : '未知');
-        const { workDays } = calculateEventDays(ev.startDate, ev.endDate);
+        const { calDays, workDays } = calculateEventDays(ev.startDate, ev.endDate);
 
         let badgeStyle = "bg-sky-100 text-sky-800 border-sky-300";
         let typeName = "請假";
